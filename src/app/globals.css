@@ -1,0 +1,278 @@
+@import "tailwindcss";
+
+/* ============================================
+   WISHORA DESIGN SYSTEM
+   "Turn a simple wish into a magical moment."
+   ============================================ */
+
+@theme {
+  /* ---- Colors ---- */
+  --color-ivory: hsl(40 40% 97%);
+  --color-ivory-dark: hsl(40 30% 93%);
+  --color-lavender: hsl(270 30% 96%);
+  --color-lavender-dark: hsl(270 25% 90%);
+
+  --color-plum: hsl(320 60% 30%);
+  --color-plum-light: hsl(320 50% 45%);
+  --color-plum-dark: hsl(320 65% 22%);
+  --color-plum-50: hsl(320 60% 96%);
+  --color-plum-100: hsl(320 55% 90%);
+  --color-plum-200: hsl(320 50% 80%);
+
+  --color-coral: hsl(12 76% 61%);
+  --color-coral-light: hsl(12 80% 72%);
+  --color-coral-dark: hsl(12 70% 48%);
+
+  --color-rose: hsl(340 65% 55%);
+  --color-rose-light: hsl(340 60% 70%);
+  --color-rose-dark: hsl(340 70% 42%);
+
+  --color-gold: hsl(42 78% 55%);
+  --color-gold-light: hsl(42 80% 72%);
+  --color-gold-dark: hsl(42 75% 42%);
+
+  --color-peach: hsl(25 80% 85%);
+  --color-peach-light: hsl(25 85% 92%);
+
+  --color-charcoal: hsl(280 15% 20%);
+  --color-charcoal-light: hsl(280 10% 40%);
+  --color-charcoal-muted: hsl(280 8% 55%);
+
+  --color-emerald: hsl(152 55% 42%);
+  --color-amber: hsl(38 92% 50%);
+  --color-red: hsl(0 72% 51%);
+
+  --color-surface: hsl(0 0% 100%);
+  --color-surface-raised: hsl(0 0% 99%);
+  --color-border: hsl(280 10% 88%);
+  --color-border-light: hsl(280 8% 93%);
+
+  /* ---- Shadows ---- */
+  --shadow-soft: 0 2px 12px -2px rgba(100, 50, 80, 0.08);
+  --shadow-card: 0 4px 20px -4px rgba(100, 50, 80, 0.1);
+  --shadow-elevated: 0 8px 30px -6px rgba(100, 50, 80, 0.15);
+  --shadow-glow-plum: 0 0 20px rgba(120, 40, 80, 0.25);
+  --shadow-glow-coral: 0 0 20px rgba(220, 100, 80, 0.25);
+  --shadow-glow-gold: 0 0 20px rgba(200, 160, 60, 0.25);
+
+  /* ---- Border Radius ---- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ---- Font Families ---- */
+  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-accent: 'Georgia', 'Times New Roman', serif;
+
+  /* ---- Spacing ---- */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+  --spacing-30: 7.5rem;
+
+  /* ---- Animations ---- */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-sparkle: sparkle 2s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 3s ease-in-out infinite;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-slide-down: slide-down 0.5s ease-out;
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-scale-in: scale-in 0.3s ease-out;
+  --animate-bounce-gentle: bounce-gentle 2s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-confetti-fall: confetti-fall 3s ease-in forwards;
+  --animate-heart-beat: heart-beat 1.2s ease-in-out infinite;
+  --animate-wiggle: wiggle 0.5s ease-in-out;
+}
+
+/* ---- Keyframes ---- */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.8); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes heart-beat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.15); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.1); }
+  60% { transform: scale(1); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ---- Base Styles ---- */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-charcoal);
+  background-color: var(--color-ivory);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Focus Styles ---- */
+*:focus-visible {
+  outline: 2px solid var(--color-plum);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Reduced Motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- Selection ---- */
+::selection {
+  background-color: var(--color-plum-100);
+  color: var(--color-plum-dark);
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-ivory);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-plum-200);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-plum-light);
+}
+
+/* ---- Utility Classes ---- */
+.gradient-plum {
+  background: linear-gradient(135deg, var(--color-plum) 0%, var(--color-rose) 100%);
+}
+
+.gradient-warm {
+  background: linear-gradient(135deg, var(--color-coral) 0%, var(--color-rose) 50%, var(--color-plum) 100%);
+}
+
+.gradient-gold {
+  background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-coral-light) 100%);
+}
+
+.gradient-celebration {
+  background: linear-gradient(135deg, var(--color-peach) 0%, var(--color-rose-light) 50%, var(--color-lavender) 100%);
+}
+
+.gradient-text-plum {
+  background: linear-gradient(135deg, var(--color-plum) 0%, var(--color-rose) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-warm {
+  background: linear-gradient(135deg, var(--color-coral) 0%, var(--color-plum) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.pattern-dots {
+  background-image: radial-gradient(var(--color-plum-100) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+/* ---- Skeleton Loading ---- */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-ivory-dark) 25%,
+    var(--color-ivory) 50%,
+    var(--color-ivory-dark) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+  border-radius: var(--radius-md);
+}
