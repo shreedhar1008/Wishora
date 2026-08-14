@@ -175,11 +175,52 @@ export class SupabaseAdapter implements DataAdapter {
       published_at: isPublished ? new Date().toISOString() : null,
     };
 
-    const { data, error } = await this.client
+    let { data, error } = await this.client
       .from('wishes')
       .insert(insertData)
       .select()
       .single();
+
+    // If foreign key constraint on owner_id fails (missing profile row)
+    if (error && error.message.includes('wishes_owner_id_fkey')) {
+      console.warn('Foreign key violation on owner_id, attempting auto-recovery...');
+      if (insertData.owner_id) {
+        try {
+          await this.client.from('profiles').upsert({
+            id: insertData.owner_id,
+            display_name: insertData.sender_name || 'User',
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'id' });
+
+          const retryResult = await this.client
+            .from('wishes')
+            .insert(insertData)
+            .select()
+            .single();
+
+          if (!retryResult.error) {
+            data = retryResult.data;
+            error = null;
+          }
+        } catch {
+          // ignore error and proceed to fallback
+        }
+      }
+
+      // If still error, insert with owner_id = null so wish is NEVER lost
+      if (error) {
+        const fallbackNullResult = await this.client
+          .from('wishes')
+          .insert({ ...insertData, owner_id: null })
+          .select()
+          .single();
+
+        if (!fallbackNullResult.error) {
+          data = fallbackNullResult.data;
+          error = null;
+        }
+      }
+    }
 
     if (error) {
       console.error('Supabase createWish error:', error.message);

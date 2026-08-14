@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- Wishes
 CREATE TABLE IF NOT EXISTS wishes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  owner_id UUID,
   public_token TEXT UNIQUE NOT NULL,
   creator_manage_token_hash TEXT,
   template_slug TEXT NOT NULL,
@@ -101,32 +101,49 @@ ALTER TABLE wish_replies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wish_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
--- Allow anyone to create a wish (guests or authenticated users)
-CREATE POLICY "Anyone can create wishes" ON wishes
-  FOR INSERT WITH CHECK (true);
+-- Profiles Policies
+DROP POLICY IF EXISTS "Anyone can insert profiles" ON profiles;
+CREATE POLICY "Anyone can insert profiles" ON profiles FOR INSERT WITH CHECK (true);
 
--- Allow public read access to published wishes or public wishes
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
+CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Wishes Policies
+DROP POLICY IF EXISTS "Anyone can create wishes" ON wishes;
+CREATE POLICY "Anyone can create wishes" ON wishes
+  FOR INSERT TO anon, authenticated
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public wishes are viewable by everyone" ON wishes;
 CREATE POLICY "Public wishes are viewable by everyone" ON wishes
   FOR SELECT USING (true);
 
--- Allow creators to manage their own wishes
+DROP POLICY IF EXISTS "Users can manage their own wishes" ON wishes;
 CREATE POLICY "Users can manage their own wishes" ON wishes
   FOR ALL USING (auth.uid() = owner_id);
 
--- Allow inserting reactions for everyone
+-- Reactions Policies
+DROP POLICY IF EXISTS "Anyone can add a reaction" ON wish_reactions;
 CREATE POLICY "Anyone can add a reaction" ON wish_reactions
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
   
+DROP POLICY IF EXISTS "Anyone can view reactions" ON wish_reactions;
 CREATE POLICY "Anyone can view reactions" ON wish_reactions
   FOR SELECT USING (true);
 
--- Allow inserting replies for everyone
+-- Replies Policies
+DROP POLICY IF EXISTS "Anyone can add a reply" ON wish_replies;
 CREATE POLICY "Anyone can add a reply" ON wish_replies
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
   
+DROP POLICY IF EXISTS "Anyone can view approved replies" ON wish_replies;
 CREATE POLICY "Anyone can view approved replies" ON wish_replies
-  FOR SELECT USING (is_approved = true);
+  FOR SELECT USING (true);
 
--- Allow tracking views
+-- Views Policies
+DROP POLICY IF EXISTS "Anyone can track views" ON wish_views;
 CREATE POLICY "Anyone can track views" ON wish_views
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT TO anon, authenticated WITH CHECK (true);

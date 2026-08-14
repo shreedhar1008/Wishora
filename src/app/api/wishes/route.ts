@@ -57,6 +57,18 @@ export async function POST(request: NextRequest) {
         if (user) {
           userId = user.id;
           authSupabaseClient = supabase;
+
+          // Ensure profile exists in profiles table
+          try {
+            await supabase.from('profiles').upsert({
+              id: user.id,
+              email: user.email,
+              display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'id' });
+          } catch (profileErr) {
+            console.warn('Profile auto-create notice:', profileErr);
+          }
         }
       } catch (authErr) {
         console.warn('Supabase auth session check failed, proceeding as guest:', authErr);
