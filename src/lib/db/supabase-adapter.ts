@@ -175,35 +175,17 @@ export class SupabaseAdapter implements DataAdapter {
       published_at: isPublished ? new Date().toISOString() : null,
     };
 
-    try {
-      const { data, error } = await this.client
-        .from('wishes')
-        .insert(insertData)
-        .select()
-        .single();
+    const { data, error } = await this.client
+      .from('wishes')
+      .insert(insertData)
+      .select()
+      .single();
 
-      if (error) {
-        console.warn('Supabase createWish error, falling back to memory store:', error.message);
-        return await this.demoFallback.createWish({
-          ...wish,
-          publicToken: token,
-          isPublished,
-          isPublic,
-          status,
-        });
-      }
-      return rowToWish(data as WishRow);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.warn('Supabase createWish exception, falling back to memory store:', msg);
-      return await this.demoFallback.createWish({
-        ...wish,
-        publicToken: token,
-        isPublished,
-        isPublic,
-        status,
-      });
+    if (error) {
+      console.error('Supabase createWish error:', error.message);
+      throw new Error(`Database error: ${error.message}`);
     }
+    return rowToWish(data as WishRow);
   }
 
   async getWishByToken(publicToken: string): Promise<Wish | null> {

@@ -4,11 +4,13 @@ import WishClientPage from './WishClientPage';
 import { TEMPLATES } from '@/lib/templates/definitions';
 import { Wish } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const unwrappedParams = await params;
   const token = unwrappedParams.token;
   try {
-    const db = await getDataAdapter();
+    const db = getDataAdapter();
     const wish = await db.getWishByToken(token);
     if (wish) {
       const template = TEMPLATES.find(t => t.id === wish.templateId || t.slug === wish.templateSlug);
@@ -40,7 +42,7 @@ export default async function WishPage({ params }: { params: Promise<{ token: st
   let serverWish: Partial<Wish> | null = null;
   
   try {
-    const db = await getDataAdapter();
+    const db = getDataAdapter();
     serverWish = await db.getWishByToken(token);
   } catch {
     // Ignore error, fallback to client-side resolving

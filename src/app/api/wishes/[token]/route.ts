@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDataAdapter } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const { token } = await params;
-    const db = await getDataAdapter();
+    const db = getDataAdapter();
     const wish = await db.getWishByToken(token);
 
     if (!wish) {
