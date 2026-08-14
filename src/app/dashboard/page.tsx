@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button, Card, Badge } from '@/components/ui';
+import { redirect } from 'next/navigation';
 import { getDataAdapter } from '@/lib/db';
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase';
 import { TEMPLATES } from '@/lib/templates/definitions';
@@ -22,6 +23,8 @@ export default async function DashboardPage() {
     if (user) {
       userId = user.id;
       userName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'Creator';
+    } else {
+      redirect('/login');
     }
   }
 

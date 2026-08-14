@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { getDataAdapter } from '@/lib/db';
 import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase';
 import { TEMPLATES } from '@/lib/templates/definitions';
@@ -19,6 +20,8 @@ export default async function MyWishesPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       userId = user.id;
+    } else {
+      redirect('/login');
     }
   }
 
