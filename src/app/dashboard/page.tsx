@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'Manage your wishes and account.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   let userId = 'demo_user';
   let userName = 'Creator';

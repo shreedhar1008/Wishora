@@ -4,6 +4,8 @@ import { getDataAdapter } from '@/lib/db';
 import AdminClientView from './AdminClientView';
 import { redirect } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
   const isSupabase = isSupabaseConfigured();
   

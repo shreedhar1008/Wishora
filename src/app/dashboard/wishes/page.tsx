@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: 'Manage all your created wishes.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function MyWishesPage() {
   let userId = 'demo_user';
 
