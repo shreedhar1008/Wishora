@@ -5,6 +5,7 @@ import { Footer } from "@/components/marketing/Footer";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: {
     default: "Wishora — Turn a simple wish into a magical moment",
     template: "%s | Wishora",
