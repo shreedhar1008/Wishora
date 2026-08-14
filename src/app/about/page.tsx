@@ -15,11 +15,6 @@ export default function AboutPage() {
     { title: 'Joy', desc: 'Focusing on what matters most: human connection.' },
   ];
 
-  const team = [
-    { name: 'Alex Rivera', role: 'Founder & CEO', initials: 'AR' },
-    { name: 'Sam Taylor', role: 'Head of Design', initials: 'ST' },
-    { name: 'Jordan Lee', role: 'Lead Engineer', initials: 'JL' },
-  ];
 
   return (
     <main className="min-h-screen bg-ivory pb-20 pt-32">
@@ -59,15 +54,32 @@ export default function AboutPage() {
         </section>
 
         <section className="mb-24">
-          <h2 className="text-3xl font-bold text-plum text-center mb-12">Meet the Team</h2>
-          <div className="grid sm:grid-cols-3 gap-8 text-center max-w-3xl mx-auto">
-            {team.map((t) => (
-              <div key={t.name} className="flex flex-col items-center">
-                <Avatar fallback={t.initials} size="lg" className="mb-4 h-24 w-24 text-2xl bg-coral text-white" />
-                <h3 className="text-xl font-bold text-charcoal">{t.name}</h3>
-                <p className="text-charcoal-muted">{t.role}</p>
+          <h2 className="text-3xl font-bold text-plum text-center mb-6">Meet the Developer</h2>
+          <div className="flex flex-col items-center max-w-2xl mx-auto text-center bg-surface p-8 rounded-3xl shadow-soft">
+            <Avatar fallback="SS" size="lg" className="mb-6 h-32 w-32 text-4xl bg-coral text-white" />
+            <h3 className="text-2xl font-bold text-charcoal mb-2">Shreedhar Shiragur</h3>
+            <p className="text-lg text-plum font-medium mb-6">Creator & Full-Stack Developer</p>
+            <p className="text-charcoal-muted mb-8 leading-relaxed">
+              I built Wishora to bring more meaning and interaction to our digital greetings. As a sole developer, I poured my passion for beautifully crafted user experiences into every template and feature. Let's connect!
+            </p>
+            
+            <div className="w-full border-t border-border-light pt-6">
+              <h4 className="text-sm font-bold text-charcoal-muted uppercase tracking-wider mb-4">Connect & Follow</h4>
+              <div className="flex flex-wrap justify-center gap-4">
+                <a href="mailto:shreedharshiragurr@gmail.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-lavender text-plum rounded-xl hover:bg-plum hover:text-white transition-colors font-medium">
+                  Email
+                </a>
+                <a href="https://www.linkedin.com/in/shreedhar-shiragur/" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-lavender text-plum rounded-xl hover:bg-plum hover:text-white transition-colors font-medium">
+                  LinkedIn
+                </a>
+                <a href="https://www.instagram.com/man_of_million__hearts/" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-lavender text-plum rounded-xl hover:bg-plum hover:text-white transition-colors font-medium">
+                  Instagram
+                </a>
+                <a href="https://shreedharshiragur.vercel.app/" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-lavender text-plum rounded-xl hover:bg-plum hover:text-white transition-colors font-medium">
+                  Portfolio
+                </a>
               </div>
-            ))}
+            </div>
           </div>
         </section>
 

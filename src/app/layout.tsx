@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/marketing/Navbar";
 import { Footer } from "@/components/marketing/Footer";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -63,11 +64,13 @@ export default function RootLayout({
         <meta name="theme-color" content="hsl(320, 60%, 30%)" />
       </head>
       <body className="min-h-screen flex flex-col antialiased">
-        <Navbar />
-        <main className="flex-1 pt-16">
-          {children}
-        </main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1 pt-16">
+            {children}
+          </main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

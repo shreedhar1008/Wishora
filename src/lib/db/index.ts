@@ -1,19 +1,36 @@
 import { DataAdapter } from './adapter';
 import { DemoDataAdapter } from '../demo/data';
+import { SupabaseAdapter } from './supabase-adapter';
+import { isSupabaseConfigured } from '../supabase';
 
-// Singleton instance of the demo adapter to maintain state
+// ─────────────────────────────────────────────
+// Adapter Factory
+// ─────────────────────────────────────────────
+// Automatically returns the SupabaseAdapter when Supabase env vars are set,
+// otherwise falls back to the in-memory DemoDataAdapter.
+
 let demoAdapterInstance: DemoDataAdapter | null = null;
+let supabaseAdapterInstance: SupabaseAdapter | null = null;
 
 export function getDataAdapter(): DataAdapter {
-  // In a real application, we would check for Supabase credentials:
-  // if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  //   return new SupabaseAdapter();
-  // }
-  
-  // For now, always return the demo adapter
+  // Production mode: use Supabase
+  if (isSupabaseConfigured()) {
+    if (!supabaseAdapterInstance) {
+      supabaseAdapterInstance = new SupabaseAdapter();
+    }
+    return supabaseAdapterInstance;
+  }
+
+  // Demo mode: use in-memory store
   if (!demoAdapterInstance) {
     demoAdapterInstance = new DemoDataAdapter();
   }
-  
   return demoAdapterInstance;
+}
+
+/**
+ * Returns true if the app is running in demo mode (no Supabase configured).
+ */
+export function isDemoMode(): boolean {
+  return !isSupabaseConfigured();
 }

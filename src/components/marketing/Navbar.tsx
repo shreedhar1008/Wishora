@@ -2,9 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 const NAV_LINKS = [
   { href: '/templates', label: 'Templates' },
@@ -15,8 +16,22 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading, signOut: handleSignOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+
+  const userInitials = React.useMemo(() => {
+    if (!user) return '?';
+    const name = user.user_metadata?.display_name || user.email || '';
+    return name
+      .split(/[\s@]/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((s: string) => s[0]?.toUpperCase())
+      .join('');
+  }, [user]);
 
   React.useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -86,14 +101,67 @@ export function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login">
-            <Button variant="ghost" size="sm">Log in</Button>
-          </Link>
-          <Link href="/create">
-            <Button variant="primary" size="sm">
-              ✨ Create a Wish
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link href="/create">
+                <Button variant="primary" size="sm">
+                  ✨ Create a Wish
+                </Button>
+              </Link>
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="w-9 h-9 rounded-full gradient-plum text-white text-xs font-bold flex items-center justify-center hover:shadow-md transition-shadow"
+                  aria-label="User menu"
+                >
+                  {userInitials}
+                </button>
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-surface rounded-2xl shadow-elevated border border-border-light py-2 z-50 animate-fade-in">
+                    <div className="px-4 py-2 border-b border-border-light">
+                      <p className="text-sm font-medium text-charcoal truncate">{user?.user_metadata?.display_name || 'Creator'}</p>
+                      <p className="text-xs text-charcoal-muted truncate">{user?.email}</p>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-charcoal hover:bg-ivory transition-colors"
+                    >
+                      📊 Dashboard
+                    </Link>
+                    <Link
+                      href="/create"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-charcoal hover:bg-ivory transition-colors"
+                    >
+                      ✨ Create Wish
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        setIsProfileOpen(false);
+                        await handleSignOut();
+                        router.push('/');
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" size="sm">Log in</Button>
+              </Link>
+              <Link href="/create">
+                <Button variant="primary" size="sm">
+                  ✨ Create a Wish
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -135,12 +203,35 @@ export function Navbar() {
               </Link>
             ))}
             <div className="pt-4 border-t border-border-light flex flex-col gap-2">
-              <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" size="md" className="w-full">Log in</Button>
-              </Link>
-              <Link href="/create" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="primary" size="md" className="w-full">✨ Create a Wish</Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" size="md" className="w-full">📊 Dashboard</Button>
+                  </Link>
+                  <Link href="/create" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="primary" size="md" className="w-full">✨ Create a Wish</Button>
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      setIsMenuOpen(false);
+                      await handleSignOut();
+                      router.push('/');
+                    }}
+                    className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" size="md" className="w-full">Log in</Button>
+                  </Link>
+                  <Link href="/create" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="primary" size="md" className="w-full">✨ Create a Wish</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

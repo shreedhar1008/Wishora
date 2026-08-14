@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getDataAdapter } from '@/lib/db';
 import { sanitizeHtml } from '@/lib/utils';
+import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase';
+
+const wishSchema = z.object({
+  templateId: z.string().optional(),
+  templateSlug: z.string().optional(),
+  occasion: z.string().optional(),
+  title: z.string().optional(),
+  recipientName: z.string().min(1, "Recipient name is required"),
+  senderName: z.string().optional(),
+  message: z.string().min(1, "Message is required"),
+  relationship: z.string().optional(),
+  isPublic: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+  settings: z.record(z.unknown()).optional(),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,26 +38,48 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    const parsed = wishSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Validation failed', details: parsed.error.format() }, { status: 400 });
+    }
+
+    const validatedBody = parsed.data;
+
+    let userId: string | undefined;
+    if (isSupabaseConfigured()) {
+      const supabase = getSupabaseServerClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        userId = user.id;
+      }
+    }
+
     const db = await getDataAdapter();
 
     // Sanitize message content
-    if (body.message) {
-      body.message = sanitizeHtml(body.message);
+    if (validatedBody.message) {
+      validatedBody.message = sanitizeHtml(validatedBody.message);
     }
     
-    if (body.recipientName) {
-      body.recipientName = sanitizeHtml(body.recipientName);
+    if (validatedBody.recipientName) {
+      validatedBody.recipientName = sanitizeHtml(validatedBody.recipientName);
     }
     
-    if (body.senderName) {
-      body.senderName = sanitizeHtml(body.senderName);
+    if (validatedBody.senderName) {
+      validatedBody.senderName = sanitizeHtml(validatedBody.senderName);
     }
     
-    if (body.title) {
-      body.title = sanitizeHtml(body.title);
+    if (validatedBody.title) {
+      validatedBody.title = sanitizeHtml(validatedBody.title);
     }
 
-    const wish = await db.createWish(body);
+    const wishToCreate = {
+      ...validatedBody,
+      ownerId: userId,
+    };
+
+    const wish = await db.createWish(wishToCreate);
 
     return NextResponse.json(wish, { status: 201 });
   } catch (error) {
