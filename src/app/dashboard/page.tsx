@@ -29,13 +29,13 @@ export default async function DashboardPage() {
     }
   }
 
-  const db = await getDataAdapter();
+  const db = getDataAdapter();
   
   // Fetch real data
   const dashboardStats = await db.getDashboardStats(userId);
   const wishes = await db.getWishesByOwner(userId);
   
-  // Get top 3 recent wishes with their individual stats
+  // Get recent wishes with their individual stats & replies
   const recentWishes = await Promise.all(
     wishes.slice(0, 3).map(async (wish) => {
       const stats = await db.getWishStats(wish.id);
@@ -43,16 +43,36 @@ export default async function DashboardPage() {
       return {
         ...wish,
         emoji: template?.emoji || '✨',
-        views: stats.views
+        views: stats.views,
+        reactionsCount: stats.reactions,
+        repliesCount: stats.replies,
       };
     })
   );
 
+  // Fetch all recent replies across all user's wishes
+  const recentReplies = (
+    await Promise.all(
+      wishes.map(async (wish) => {
+        const reps = await db.getReplies(wish.id);
+        return reps.map((r) => ({
+          ...r,
+          wishTitle: wish.title || `Wish for ${wish.recipientName}`,
+          recipientName: wish.recipientName,
+          publicToken: wish.publicToken,
+        }));
+      })
+    )
+  )
+    .flat()
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
   const stats = [
-    { label: 'Total Wishes', value: dashboardStats.totalWishes.toString() },
-    { label: 'Published', value: wishes.filter(w => w.isPublished).length.toString() },
-    { label: 'Total Views', value: dashboardStats.totalViews.toString() },
-    { label: 'Reactions', value: dashboardStats.totalReactions.toString() },
+    { label: 'Total Wishes', value: dashboardStats.totalWishes.toString(), emoji: '🪄' },
+    { label: 'Total Views', value: dashboardStats.totalViews.toString(), emoji: '👀' },
+    { label: 'Reactions', value: dashboardStats.totalReactions.toString(), emoji: '❤️' },
+    { label: 'Replies', value: dashboardStats.totalReplies.toString(), emoji: '💌' },
   ];
 
   return (
@@ -60,7 +80,7 @@ export default async function DashboardPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-plum">Welcome back, {userName}! 👋</h1>
-          <p className="text-charcoal-muted mt-1">Here&apos;s what&apos;s happening with your wishes.</p>
+          <p className="text-charcoal-muted mt-1">Here&apos;s what&apos;s happening with your wishes and replies.</p>
         </div>
         <Link href="/create">
           <Button size="lg" className="w-full sm:w-auto">✨ Create New Wish</Button>
@@ -70,14 +90,66 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <Card key={stat.label} className="p-6 border-none shadow-soft bg-surface">
-            <p className="text-sm font-medium text-charcoal-muted mb-2">{stat.label}</p>
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-sm font-medium text-charcoal-muted">{stat.label}</p>
+              <span className="text-xl">{stat.emoji}</span>
+            </div>
             <p className="text-3xl font-bold text-plum">{stat.value}</p>
           </Card>
         ))}
       </div>
 
+      {/* Recipient Replies Feed */}
       <div>
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">💌</span>
+            <h2 className="text-xl font-bold text-charcoal">Recipient Replies</h2>
+          </div>
+          <Link href="/dashboard/wishes" className="text-sm font-medium text-coral hover:text-coral-dark">
+            Manage Wishes →
+          </Link>
+        </div>
+
+        {recentReplies.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {recentReplies.map((reply) => (
+              <Card key={reply.id} className="p-5 border-none shadow-soft bg-surface flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="font-bold text-charcoal text-sm">{reply.displayName}</span>
+                      <span className="text-xs text-charcoal-muted block">
+                        Replied to &quot;{reply.wishTitle}&quot;
+                      </span>
+                    </div>
+                    <Badge variant="gold">💌 New Reply</Badge>
+                  </div>
+                  <p className="text-sm text-charcoal/90 mt-3 p-3 bg-lavender/40 rounded-xl leading-relaxed italic">
+                    &quot;{reply.body}&quot;
+                  </p>
+                </div>
+                <div className="flex justify-between items-center mt-4 pt-3 border-t border-border-light text-xs text-charcoal-muted">
+                  <span>{new Date(reply.createdAt).toLocaleString()}</span>
+                  <Link href={`/w/${reply.publicToken}`} className="text-plum font-semibold hover:underline">
+                    View Wish →
+                  </Link>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-6 text-center bg-surface border-none shadow-soft mb-8">
+            <p className="text-sm text-charcoal-muted">
+              No replies yet! When recipients open your wish link and write a reply, their messages will appear here instantly.
+            </p>
+          </Card>
+        )}
+      </div>
+
+      {/* Recent Wishes List */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-charcoal">Recent Wishes</h2>
           <Link href="/dashboard/wishes" className="text-sm font-medium text-coral hover:text-coral-dark">
             View all →
@@ -97,17 +169,12 @@ export default async function DashboardPage() {
                   </Badge>
                 </div>
                 <h3 className="text-lg font-bold text-charcoal mb-1 line-clamp-1">{wish.title || wish.recipientName}</h3>
-                <div className="flex justify-between items-center mt-auto pt-4 text-xs text-charcoal-muted">
-                  <span>{new Date(wish.createdAt).toLocaleDateString()}</span>
-                  {wish.status === 'published' && (
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      {wish.views}
-                    </span>
-                  )}
+                <p className="text-xs text-charcoal-muted mb-4">For {wish.recipientName}</p>
+
+                <div className="flex items-center gap-3 text-xs text-charcoal-muted mt-auto pt-4 border-t border-border-light">
+                  <span>👀 {wish.views || 0} views</span>
+                  <span>❤️ {wish.reactionsCount || 0}</span>
+                  <span>💌 {wish.repliesCount || 0}</span>
                 </div>
               </Card>
             ))}

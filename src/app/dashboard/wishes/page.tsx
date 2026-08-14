@@ -8,7 +8,7 @@ import MyWishesClient from './MyWishesClient';
 
 export const metadata: Metadata = {
   title: 'My Wishes | Wishora',
-  description: 'Manage all your created wishes.',
+  description: 'Manage all your created wishes and view recipient replies.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -26,17 +26,25 @@ export default async function MyWishesPage() {
     }
   }
 
-  const db = await getDataAdapter();
+  const db = getDataAdapter();
   const rawWishes = await db.getWishesByOwner(userId);
 
   const wishesWithStats = await Promise.all(
     rawWishes.map(async (wish) => {
-      const stats = await db.getWishStats(wish.id);
+      const [stats, repliesList, reactionsList] = await Promise.all([
+        db.getWishStats(wish.id),
+        db.getReplies(wish.id),
+        db.getReactions(wish.id),
+      ]);
+
       const template = TEMPLATES.find(t => t.id === wish.templateId || t.slug === wish.templateSlug);
+
       return {
         ...wish,
         emoji: template?.emoji || '✨',
-        views: stats.views
+        views: stats.views,
+        replies: repliesList,
+        reactions: reactionsList,
       };
     })
   );
