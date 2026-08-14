@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         userId = user.id;
+      } else {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
 
