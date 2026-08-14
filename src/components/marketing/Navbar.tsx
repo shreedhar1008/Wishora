@@ -17,7 +17,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, signOut: handleSignOut } = useAuth();
+  const { user, isAuthenticated, signOut: handleSignOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);

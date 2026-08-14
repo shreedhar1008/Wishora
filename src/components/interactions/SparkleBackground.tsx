@@ -8,27 +8,40 @@ export interface SparkleBackgroundProps {
   density?: "low" | "medium" | "high";
 }
 
+interface SparkleItem {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  duration: number;
+  delay: number;
+}
+
 export const SparkleBackground: React.FC<SparkleBackgroundProps> = ({
   color = "#ffb84d",
   density = "medium",
 }) => {
-  const [sparkles, setSparkles] = useState<any[]>([]);
   const prefersReducedMotion = useReducedMotion();
+  const [sparkles, setSparkles] = useState<SparkleItem[]>([]);
 
   useEffect(() => {
     if (prefersReducedMotion) return;
 
-    const count = density === "low" ? 20 : density === "high" ? 60 : 40;
-    const newSparkles = Array.from({ length: count }).map((_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 4 + 2,
-      duration: Math.random() * 2 + 1,
-      delay: Math.random() * 2,
-    }));
-    
-    setSparkles(newSparkles);
+    const frameId = requestAnimationFrame(() => {
+      const count = density === "low" ? 20 : density === "high" ? 60 : 40;
+      const newSparkles: SparkleItem[] = Array.from({ length: count }).map((_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * 4 + 2,
+        duration: Math.random() * 2 + 1,
+        delay: Math.random() * 2,
+      }));
+      
+      setSparkles(newSparkles);
+    });
+
+    return () => cancelAnimationFrame(frameId);
   }, [density, prefersReducedMotion]);
 
   if (prefersReducedMotion) return null;

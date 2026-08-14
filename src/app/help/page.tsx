@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { Input, Accordion, Card } from '@/components/ui';
 
 export const metadata: Metadata = {
@@ -64,10 +65,10 @@ export default function HelpPage() {
 
         <Card className="mt-20 p-8 text-center bg-lavender border-none shadow-soft">
           <h3 className="text-xl font-bold text-plum mb-2">Still need help?</h3>
-          <p className="text-charcoal-muted mb-6">We're here to assist you with any questions.</p>
-          <a href="/contact" className="inline-block bg-plum text-white px-6 py-3 rounded-xl font-semibold hover:bg-plum-light transition-colors">
+          <p className="text-charcoal-muted mb-6">We&apos;re here to assist you with any questions.</p>
+          <Link href="/contact" className="inline-block bg-plum text-white px-6 py-3 rounded-xl font-semibold hover:bg-plum-light transition-colors">
             Contact Support
-          </a>
+          </Link>
         </Card>
       </div>
     </main>

@@ -122,7 +122,38 @@ function LoginForm() {
             </div>
           )}
 
+          {/* OAuth Buttons */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isDemoMode || isLoading}
+              onClick={() => handleOAuth('google')}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <span>Google</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isDemoMode || isLoading}
+              onClick={() => handleOAuth('github')}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <span>GitHub</span>
+            </Button>
+          </div>
 
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border-light" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-surface px-2 text-charcoal-muted">Or continue with</span>
+            </div>
+          </div>
 
           {/* Mode toggle */}
           {!isDemoMode && (
@@ -239,8 +270,6 @@ function LoginForm() {
               </Button>
             </form>
           )}
-
-
         </Card>
       </div>
     </main>

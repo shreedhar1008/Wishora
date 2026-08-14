@@ -1,7 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Wish, WishReaction, WishReply, WishStats, ReactionType } from '@/types';
 import { DataAdapter } from './adapter';
-import { getSupabaseServerClient } from '../supabase';
+import { getSupabaseAdminClient } from '../supabase';
 import { generateToken } from '../utils';
 
 // ─────────────────────────────────────────────
@@ -64,8 +64,8 @@ function rowToWish(row: WishRow): Wish {
     publicToken: row.public_token,
     isPublic: row.visibility === 'public',
     isPublished: row.status === 'published',
-    status: row.status as Wish['status'],
-    visibility: row.visibility as Wish['visibility'],
+    status: (row.status || 'published') as Wish['status'],
+    visibility: (row.visibility || 'public') as Wish['visibility'],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     publishedAt: row.published_at || undefined,
@@ -100,11 +100,19 @@ function wishToInsertRow(wish: Partial<Wish>): Record<string, unknown> {
   if (wish.message !== undefined) row.message = wish.message;
   if (wish.relationship !== undefined) row.relationship = wish.relationship;
   if (wish.settings !== undefined) row.settings = wish.settings;
-  if (wish.status !== undefined) row.status = wish.status;
-  if (wish.visibility !== undefined) row.visibility = wish.visibility;
-  if (wish.isPublic !== undefined) row.visibility = wish.isPublic ? 'public' : 'private';
-  if (wish.isPublished !== undefined) row.status = wish.isPublished ? 'published' : 'draft';
-  if (wish.publishedAt !== undefined) row.published_at = wish.publishedAt;
+  
+  const isPublished = wish.isPublished !== false;
+  const status = wish.status || (isPublished ? 'published' : 'draft');
+  row.status = status;
+  
+  const isPublic = wish.isPublic !== undefined ? wish.isPublic : (wish.visibility === 'public');
+  row.visibility = isPublic ? 'public' : 'private';
+
+  if (wish.publishedAt !== undefined) {
+    row.published_at = wish.publishedAt;
+  } else if (status === 'published') {
+    row.published_at = new Date().toISOString();
+  }
 
   return row;
 }
@@ -137,23 +145,31 @@ export class SupabaseAdapter implements DataAdapter {
   private client: SupabaseClient;
 
   constructor(client?: SupabaseClient) {
-    this.client = client || getSupabaseServerClient();
+    this.client = client || getSupabaseAdminClient();
   }
 
   // ── Wishes ────────────────────────────────
 
   async createWish(wish: Partial<Wish>): Promise<Wish> {
     const token = wish.publicToken || generateToken(16);
+    const isPublished = wish.isPublished !== false;
+    const status = wish.status || (isPublished ? 'published' : 'draft');
+    const isPublic = wish.isPublic !== undefined ? wish.isPublic : (wish.visibility === 'public');
+
     const insertData = {
       ...wishToInsertRow(wish),
       public_token: token,
-      template_slug: wish.templateSlug || wish.templateId || 'tpl_bday_1',
+      template_slug: wish.templateSlug || wish.templateId || 'birthday-balloon-blast',
       occasion: wish.occasion || 'birthday',
       recipient_name: wish.recipientName || 'Friend',
+      sender_name: wish.senderName || null,
+      title: wish.title || null,
       message: wish.message || '',
-      status: wish.status || 'draft',
-      visibility: wish.isPublic ? 'public' : 'private',
+      status: status,
+      visibility: isPublic ? 'public' : 'private',
       settings: wish.settings || {},
+      owner_id: wish.ownerId || null,
+      published_at: isPublished ? new Date().toISOString() : null,
     };
 
     const { data, error } = await this.client
@@ -162,7 +178,10 @@ export class SupabaseAdapter implements DataAdapter {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create wish: ${error.message}`);
+    if (error) {
+      console.error('Supabase createWish error:', error.message);
+      throw new Error(`Failed to create wish: ${error.message}`);
+    }
     return rowToWish(data as WishRow);
   }
 
@@ -171,12 +190,12 @@ export class SupabaseAdapter implements DataAdapter {
       .from('wishes')
       .select('*')
       .eq('public_token', publicToken)
-      .eq('status', 'published')
       .single();
 
     if (error) {
       if (error.code === 'PGRST116') return null; // Not found
-      throw new Error(`Failed to get wish: ${error.message}`);
+      console.error('Supabase getWishByToken error:', error.message);
+      return null;
     }
     return data ? rowToWish(data as WishRow) : null;
   }
@@ -274,7 +293,6 @@ export class SupabaseAdapter implements DataAdapter {
   // ── Reactions ─────────────────────────────
 
   async addReaction(wishId: string, reactionType: ReactionType): Promise<WishReaction> {
-    // Upsert: increment count if reaction type already exists, otherwise insert
     const { data: existing } = await this.client
       .from('wish_reactions')
       .select('*')
@@ -331,7 +349,7 @@ export class SupabaseAdapter implements DataAdapter {
         wish_id: wishId,
         display_name: displayName || 'Anonymous',
         body,
-        is_approved: true, // Auto-approve for now
+        is_approved: true,
       })
       .select()
       .single();
@@ -354,16 +372,15 @@ export class SupabaseAdapter implements DataAdapter {
 
   // ── Views ─────────────────────────────────
 
-  async addView(wishId: string, _deviceType?: string, _referrer?: string): Promise<void> {
+  async addView(wishId: string, deviceType?: string, referrer?: string): Promise<void> {
     const { error } = await this.client
       .from('wish_views')
       .insert({
         wish_id: wishId,
-        user_agent: _deviceType || null,
+        user_agent: deviceType || referrer || null,
       });
 
     if (error) {
-      // Non-critical — log but don't throw
       console.error('Failed to track view:', error.message);
     }
   }
@@ -387,12 +404,7 @@ export class SupabaseAdapter implements DataAdapter {
       this.getReplies(wishId),
     ]);
 
-    // Sum the count field from all reaction rows
-    const totalReactions = reactionsData.reduce((sum, r) => {
-      // The reaction row has a count field in the DB, but our type doesn't expose it.
-      // We count rows as a fallback.
-      return sum + 1;
-    }, 0);
+    const totalReactions = reactionsData.length;
 
     return {
       views: viewCount,
@@ -408,7 +420,6 @@ export class SupabaseAdapter implements DataAdapter {
     let totalReactions = 0;
     let totalReplies = 0;
 
-    // Batch stats for all user wishes
     const statsPromises = wishes.map((w) => this.getWishStats(w.id));
     const allStats = await Promise.all(statsPromises);
 

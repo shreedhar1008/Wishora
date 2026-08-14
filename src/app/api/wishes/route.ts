@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDataAdapter } from '@/lib/db';
 import { sanitizeHtml } from '@/lib/utils';
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 
 const wishSchema = z.object({
   templateId: z.string().optional(),
@@ -48,44 +49,48 @@ export async function POST(request: NextRequest) {
 
     let userId: string | undefined;
     if (isSupabaseConfigured()) {
-      const supabase = getSupabaseServerClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        userId = user.id;
-      } else {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      try {
+        const supabase = await getSupabaseServerClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          userId = user.id;
+        }
+      } catch (authErr) {
+        // Continue as guest if session check fails
+        console.warn('Supabase auth session check failed, proceeding as guest:', authErr);
       }
     }
 
     const db = await getDataAdapter();
 
-    // Sanitize message content
-    if (validatedBody.message) {
-      validatedBody.message = sanitizeHtml(validatedBody.message);
-    }
-    
-    if (validatedBody.recipientName) {
-      validatedBody.recipientName = sanitizeHtml(validatedBody.recipientName);
-    }
-    
-    if (validatedBody.senderName) {
-      validatedBody.senderName = sanitizeHtml(validatedBody.senderName);
-    }
-    
-    if (validatedBody.title) {
-      validatedBody.title = sanitizeHtml(validatedBody.title);
-    }
+    // Sanitize user input
+    const sanitizedRecipient = sanitizeHtml(validatedBody.recipientName);
+    const sanitizedMessage = sanitizeHtml(validatedBody.message);
+    const sanitizedSender = validatedBody.senderName ? sanitizeHtml(validatedBody.senderName) : undefined;
+    const sanitizedTitle = validatedBody.title ? sanitizeHtml(validatedBody.title) : undefined;
+
+    const isPublished = validatedBody.isPublished !== false;
+    const isPublic = validatedBody.isPublic ?? true;
 
     const wishToCreate = {
       ...validatedBody,
+      recipientName: sanitizedRecipient,
+      message: sanitizedMessage,
+      senderName: sanitizedSender,
+      title: sanitizedTitle,
       ownerId: userId,
+      isPublished,
+      isPublic,
+      status: isPublished ? ('published' as const) : ('draft' as const),
+      visibility: isPublic ? ('public' as const) : ('private' as const),
     };
 
     const wish = await db.createWish(wishToCreate);
 
     return NextResponse.json(wish, { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating wish:', error);
-    return NextResponse.json({ error: 'Failed to create wish' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to create wish';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

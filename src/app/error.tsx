@@ -21,7 +21,7 @@ export default function GlobalError({
       <div className="text-6xl mb-6">⚠️</div>
       <h2 className="text-3xl font-bold tracking-tight text-charcoal mb-4">Something went wrong!</h2>
       <p className="text-charcoal-muted mb-8 max-w-md mx-auto">
-        We've hit a slight bump in the road. Don't worry, our magical creatures are working on fixing it.
+        We&apos;ve hit a slight bump in the road. Don&apos;t worry, our magical creatures are working on fixing it.
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Button onClick={() => reset()} variant="primary">

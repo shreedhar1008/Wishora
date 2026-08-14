@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { PollOption } from "@/types";
 import { motion } from "framer-motion";
 
@@ -11,29 +11,36 @@ export interface PollInteractionProps {
 }
 
 export const PollInteraction: React.FC<PollInteractionProps> = ({ question, options, onVote }) => {
-  const [hasVoted, setHasVoted] = useState(false);
-  const [localVotes, setLocalVotes] = useState<Record<string, number>>({});
-  const pollId = btoa(question).substring(0, 10);
-
-  useEffect(() => {
-    const voted = sessionStorage.getItem(`poll_${pollId}`);
-    if (voted) {
-      setHasVoted(true);
+  const pollId = React.useMemo(() => {
+    try {
+      return btoa(question).substring(0, 10);
+    } catch {
+      return 'poll_default';
     }
-    
-    // Initialize dummy vote counts for visual purposes
+  }, [question]);
+
+  const [hasVoted, setHasVoted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !!sessionStorage.getItem(`poll_${pollId}`);
+    }
+    return false;
+  });
+
+  const [localVotes, setLocalVotes] = useState<Record<string, number>>(() => {
     const initialVotes: Record<string, number> = {};
     options.forEach(opt => {
       initialVotes[opt.id] = opt.votes || 0;
     });
-    setLocalVotes(initialVotes);
-  }, [options, pollId]);
+    return initialVotes;
+  });
 
   const handleVote = (optionId: string) => {
     if (hasVoted) return;
     
     setHasVoted(true);
-    sessionStorage.setItem(`poll_${pollId}`, "true");
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`poll_${pollId}`, "true");
+    }
     
     setLocalVotes(prev => ({
       ...prev,

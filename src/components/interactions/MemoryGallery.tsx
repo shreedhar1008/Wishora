@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -35,19 +36,23 @@ export const MemoryGallery: React.FC<MemoryGalleryProps> = ({ images }) => {
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={1}
-            onDragEnd={(e, { offset, velocity }) => {
+            onDragEnd={(_e, { offset }) => {
               const swipe = offset.x;
               if (swipe < -50) handleNext();
               else if (swipe > 50) handlePrev();
             }}
           >
-            <img
-              src={images[currentIndex].url}
-              alt={images[currentIndex].alt || "Memory"}
-              className="w-full h-full object-cover pointer-events-none"
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={images[currentIndex].url}
+                alt={images[currentIndex].alt || "Memory"}
+                fill
+                unoptimized
+                className="object-cover pointer-events-none"
+              />
+            </div>
             {images[currentIndex].caption && (
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent text-white text-center">
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent text-white text-center z-10">
                 {images[currentIndex].caption}
               </div>
             )}

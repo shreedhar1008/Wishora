@@ -5,88 +5,75 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // Environment helpers
 // ─────────────────────────────────────────────
 
+export function getSupabaseConfig() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  return { url, anonKey };
+}
+
 export function isSupabaseConfigured(): boolean {
-  return !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  const { url, anonKey } = getSupabaseConfig();
+  return !!url && !!anonKey && !url.includes('placeholder') && !url.includes('your-project');
 }
 
-function getSupabaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
-  return url;
-}
-
-function getSupabaseAnonKey(): string {
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!key) throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable');
-  return key;
-}
-
-function getSupabaseServiceRoleKey(): string {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
-  return key;
+export function isSupabaseAdminConfigured(): boolean {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  return isSupabaseConfigured() && !!serviceRoleKey && !serviceRoleKey.includes('placeholder');
 }
 
 // ─────────────────────────────────────────────
-// Browser Client (for client components)
+// Client Singletons / Factories
 // ─────────────────────────────────────────────
 
-let browserClient: SupabaseClient | null = null;
+let browserClientInstance: SupabaseClient | null = null;
+let adminClientInstance: SupabaseClient | null = null;
 
 /**
- * Returns a Supabase client for use in browser / client components.
- * Uses the anon key and respects RLS policies.
- * Singleton — safe to call multiple times.
+ * Browser client for Client Components.
+ * Uses `@supabase/ssr` to manage cookies in the browser.
  */
 export function getSupabaseBrowserClient(): SupabaseClient {
-  if (browserClient) return browserClient;
+  if (typeof window === 'undefined') {
+    const { url, anonKey } = getSupabaseConfig();
+    return createClient(url || 'https://placeholder.supabase.co', anonKey || 'placeholder');
+  }
 
-  browserClient = createBrowserClient(
-    getSupabaseUrl(),
-    getSupabaseAnonKey()
-  );
+  if (browserClientInstance) {
+    return browserClientInstance;
+  }
 
-  return browserClient;
-}
+  const { url, anonKey } = getSupabaseConfig();
 
-// ─────────────────────────────────────────────
-// Server Client (for API routes / Server Components)
-// ─────────────────────────────────────────────
+  if (!url || !anonKey) {
+    throw new Error('Supabase URL and Anon Key must be configured to create a browser client');
+  }
 
-/**
- * Returns a Supabase client for server-side usage.
- * Uses the anon key — respects RLS and user sessions.
- * Create a new instance per request (no singleton for server).
- */
-export function getSupabaseServerClient(): SupabaseClient {
-  return createClient(
-    getSupabaseUrl(),
-    getSupabaseAnonKey(),
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  browserClientInstance = createBrowserClient(url, anonKey);
+  return browserClientInstance;
 }
 
 /**
- * Returns a Supabase admin client with the service role key.
- * BYPASSES RLS — use only in trusted server-side contexts (API routes, webhooks).
+ * Service-role admin client for secure server tasks (bypasses RLS).
+ * Only runs on the server.
  */
 export function getSupabaseAdminClient(): SupabaseClient {
-  return createClient(
-    getSupabaseUrl(),
-    getSupabaseServiceRoleKey(),
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  if (adminClientInstance) {
+    return adminClientInstance;
+  }
+
+  const { url } = getSupabaseConfig();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+  if (!url || !serviceRoleKey) {
+    throw new Error('Supabase URL and Service Role Key or Anon Key must be configured');
+  }
+
+  adminClientInstance = createClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  return adminClientInstance;
 }

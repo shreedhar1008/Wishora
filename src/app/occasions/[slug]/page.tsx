@@ -11,8 +11,9 @@ export function generateStaticParams() {
   }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const occasion = OCCASIONS.find((o) => o.slug === params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const unwrappedParams = await params;
+  const occasion = OCCASIONS.find((o) => o.slug === unwrappedParams.slug);
   
   if (!occasion) {
     return {
@@ -47,15 +48,16 @@ function getFaqs(occasionSlug: string, occasionTitle: string) {
   ];
 }
 
-export default function OccasionPage({ params }: { params: { slug: string } }) {
-  const occasion = OCCASIONS.find((o) => o.slug === params.slug);
+export default async function OccasionPage({ params }: { params: Promise<{ slug: string }> }) {
+  const unwrappedParams = await params;
+  const occasion = OCCASIONS.find((o) => o.slug === unwrappedParams.slug);
 
   if (!occasion) {
     notFound();
   }
 
   const recommendedTemplates = Object.values(TEMPLATES).filter(
-    (t) => t.category === occasion.slug || t.tags.includes(occasion.slug)
+    (t) => t.category === occasion.slug || t.tags.includes(occasion.slug) || t.occasion === occasion.slug
   ).slice(0, 6);
 
   const faqs = getFaqs(occasion.slug, occasion.title);
@@ -92,15 +94,18 @@ export default function OccasionPage({ params }: { params: { slug: string } }) {
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
             {recommendedTemplates.map((template) => (
               <Card key={template.id} padding="none" className="rounded-2xl shadow-soft overflow-hidden border-none flex flex-col h-full">
-                <div className="h-48 bg-lavender flex items-center justify-center">
-                  <span className="text-4xl">✨</span>
+                <div
+                  className="h-48 flex items-center justify-center"
+                  style={{ background: template.previewGradient || 'linear-gradient(135deg, hsl(320, 60%, 30%), hsl(340, 65%, 55%))' }}
+                >
+                  <span className="text-5xl">{template.emoji}</span>
                 </div>
                 <div className="p-6 flex-1 flex flex-col justify-between">
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-plum mb-2">{template.title}</h3>
                     <p className="text-charcoal/80 text-sm">{template.description}</p>
                   </div>
-                  <Link href={`/create?template=${template.id}&occasion=${occasion.slug}`}>
+                  <Link href={`/create/${template.slug}`}>
                     <Button variant="outline" className="w-full rounded-xl border-plum text-plum hover:bg-plum hover:text-white">
                       Use Template
                     </Button>

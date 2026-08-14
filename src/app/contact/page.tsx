@@ -31,7 +31,7 @@ export default function ContactPage() {
         <section className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-plum mb-4">Contact Us</h1>
           <p className="text-lg text-charcoal-muted max-w-2xl mx-auto">
-            We'd love to hear from you. Please fill out the form below or email us directly.
+            We&apos;d love to hear from you. Please fill out the form below or email us directly.
           </p>
         </section>
 

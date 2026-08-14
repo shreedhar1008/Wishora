@@ -1,6 +1,5 @@
-import React from 'react';
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase';
-import { getDataAdapter } from '@/lib/db';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 import AdminClientView from './AdminClientView';
 import { redirect } from 'next/navigation';
 
@@ -10,7 +9,7 @@ export default async function AdminPage() {
   const isSupabase = isSupabaseConfigured();
   
   if (isSupabase) {
-    const supabase = getSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     // Safety check - middleware should have caught this
@@ -18,8 +17,6 @@ export default async function AdminPage() {
       redirect('/dashboard');
     }
   }
-
-  const db = await getDataAdapter();
   
   // Real stats could be fetched from DB here. 
   // We'll pass some mock or aggregated data to the client view for now.

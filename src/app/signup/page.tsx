@@ -2,13 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Button, Input, Card } from '@/components/ui';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { signUp, signInWithOAuth } from '@/lib/auth';
 
 export default function SignupPage() {
-  const router = useRouter();
   const { isDemoMode } = useAuth();
 
   const [name, setName] = useState('');
@@ -106,7 +104,38 @@ export default function SignupPage() {
             </div>
           )}
 
+          {/* OAuth Buttons */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isDemoMode || isLoading}
+              onClick={() => handleOAuth('google')}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <span>Google</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isDemoMode || isLoading}
+              onClick={() => handleOAuth('github')}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <span>GitHub</span>
+            </Button>
+          </div>
 
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border-light" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-surface px-2 text-charcoal-muted">Or sign up with email</span>
+            </div>
+          </div>
 
           <form className="space-y-5" onSubmit={handleSignup}>
             <div>
@@ -170,8 +199,6 @@ export default function SignupPage() {
             <Link href="/terms" className="text-plum hover:underline">Terms</Link> and{' '}
             <Link href="/privacy" className="text-plum hover:underline">Privacy Policy</Link>.
           </p>
-
-
         </Card>
       </div>
     </main>

@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Button, Card, Badge } from '@/components/ui';
 import { redirect } from 'next/navigation';
+import { Button, Card, Badge } from '@/components/ui';
 import { getDataAdapter } from '@/lib/db';
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { TEMPLATES } from '@/lib/templates/definitions';
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export default async function DashboardPage() {
   let userName = 'Creator';
 
   if (isSupabaseConfigured()) {
-    const supabase = getSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       userId = user.id;
@@ -59,7 +60,7 @@ export default async function DashboardPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-plum">Welcome back, {userName}! 👋</h1>
-          <p className="text-charcoal-muted mt-1">Here's what's happening with your wishes.</p>
+          <p className="text-charcoal-muted mt-1">Here&apos;s what&apos;s happening with your wishes.</p>
         </div>
         <Link href="/create">
           <Button size="lg" className="w-full sm:w-auto">✨ Create New Wish</Button>

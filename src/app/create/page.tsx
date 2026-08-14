@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Button, Card, Badge, Input } from '@/components/ui';
+import { Button, Card, Badge } from '@/components/ui';
 import { TEMPLATES } from '@/lib/templates/definitions';
 
 const OCCASIONS = [

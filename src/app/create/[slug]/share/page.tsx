@@ -1,23 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button, Card, Toast } from '@/components/ui';
 
-export default function ShareWishPage() {
+function ShareWishContent() {
   const searchParams = useSearchParams();
   const token = searchParams?.get('token');
   
-  const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  useEffect(() => {
-    if (token) {
-      setShareUrl(`${window.location.origin}/w/${token}`);
+  const shareUrl = React.useMemo(() => {
+    if (!token) return '';
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/w/${token}`;
     }
+    return `https://wishora.app/w/${token}`;
   }, [token]);
 
   if (!token) {
@@ -75,7 +76,7 @@ export default function ShareWishPage() {
 
           <div className="flex justify-center mb-6">
             <div className="p-4 bg-white rounded-xl shadow-soft border border-border-light inline-block">
-              <QRCodeSVG value={shareUrl} size={150} level="M" />
+              <QRCodeSVG value={shareUrl || 'https://wishora.app'} size={150} level="M" />
             </div>
           </div>
           <p className="text-xs text-charcoal-muted mb-8">Scan to open on mobile</p>
@@ -108,5 +109,13 @@ export default function ShareWishPage() {
         <Toast message="Link copied to clipboard!" type="success" onClose={() => setShowToast(false)} />
       )}
     </main>
+  );
+}
+
+export default function ShareWishPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-ivory flex items-center justify-center">Loading share page...</div>}>
+      <ShareWishContent />
+    </React.Suspense>
   );
 }

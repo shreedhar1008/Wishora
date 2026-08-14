@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
         }
       };
     }
-  } catch (e) {
-    // Ignore error, might be handled by client (e.g. demo wishes) or it's a 404
+  } catch {
+    // Ignore error, fallback to client-side resolving
   }
 
   return {
@@ -42,8 +42,8 @@ export default async function WishPage({ params }: { params: Promise<{ token: st
   try {
     const db = await getDataAdapter();
     serverWish = await db.getWishByToken(token);
-  } catch (e) {
-    // Ignore error, fallback to client-side resolving (demo wishes)
+  } catch {
+    // Ignore error, fallback to client-side resolving
   }
 
   return <WishClientPage token={token} serverWish={serverWish} />;

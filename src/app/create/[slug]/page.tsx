@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input, Textarea, Card, Select } from '@/components/ui';
+import { Button, Input, Textarea, Card, Badge } from '@/components/ui';
 import { TEMPLATES } from '@/lib/templates/definitions';
 
 const composeSchema = z.object({
@@ -20,6 +20,26 @@ const composeSchema = z.object({
 
 type ComposeValues = z.infer<typeof composeSchema>;
 
+const TONES = [
+  { value: 'heartfelt', label: '💖 Heartfelt', desc: 'Warm & meaningful' },
+  { value: 'funny', label: '😂 Humorous', desc: 'Fun & lighthearted' },
+  { value: 'romantic', label: '🌹 Romantic', desc: 'Loving & sweet' },
+  { value: 'poetic', label: '✨ Poetic', desc: 'Lyrical & dreamy' },
+  { value: 'short', label: '⚡ Short & Sweet', desc: 'Crisp & catchy' },
+  { value: 'inspirational', label: '🌟 Inspiring', desc: 'Uplifting & bold' },
+];
+
+const RELATIONSHIPS = [
+  'Best Friend',
+  'Partner / Spouse',
+  'Family Member',
+  'Mom',
+  'Dad',
+  'Sibling',
+  'Colleague',
+  'Friend',
+];
+
 export default function CreateSlugPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter();
   const unwrappedParams = React.use(params);
@@ -29,7 +49,14 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ComposeValues>({
+  // AI Generator state
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiTone, setAiTone] = useState<'heartfelt' | 'funny' | 'poetic' | 'short' | 'romantic' | 'inspirational'>('heartfelt');
+  const [aiRelationship, setAiRelationship] = useState('Best Friend');
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ComposeValues>({
     resolver: zodResolver(composeSchema),
     defaultValues: {
       message: template?.defaultMessage || '',
@@ -39,16 +66,55 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
     }
   });
 
+  const recipientNameValue = watch('recipientName');
+  const senderNameValue = watch('senderName');
+
   if (!template) {
     return (
       <div className="min-h-screen bg-ivory flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 text-center">
         <div className="text-6xl mb-6">😢</div>
         <h2 className="text-3xl font-bold tracking-tight text-charcoal mb-4">Template not found</h2>
-        <p className="text-charcoal-muted mb-8">The template you are looking for doesn't exist or has been removed.</p>
+        <p className="text-charcoal-muted mb-8">The template you are looking for doesn&apos;t exist or has been removed.</p>
         <Button onClick={() => router.push('/create')}>Browse Templates</Button>
       </div>
     );
   }
+
+  const handleGenerateAiMessage = async () => {
+    setIsGeneratingAi(true);
+    try {
+      const res = await fetch('/api/ai/generate-wish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientName: recipientNameValue || 'Friend',
+          senderName: senderNameValue,
+          occasion: template.occasion,
+          relationship: aiRelationship,
+          tone: aiTone,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to generate with AI');
+      const data = await res.json();
+      
+      if (data.suggestions && data.suggestions.length > 0) {
+        setAiSuggestions(data.suggestions);
+      }
+    } catch {
+      // Fallback local generator if network fails
+      const name = recipientNameValue || 'Friend';
+      const fallback = `Happy ${template.occasion}, ${name}! Wishing you endless happiness, joy, and wonderful moments. ✨`;
+      setAiSuggestions([fallback]);
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
+  const applyAiSuggestion = (msg: string) => {
+    setValue('message', msg, { shouldValidate: true });
+    setShowAiModal(false);
+  };
 
   const onSubmit = async (data: ComposeValues) => {
     setIsSubmitting(true);
@@ -64,7 +130,7 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
         title: data.title,
         message: data.message,
         isPublic: data.isPublic,
-        isPublished: true, // Auto-publish for now
+        isPublished: true,
         settings: {
           allowReactions: data.allowReactions,
           allowReplies: data.allowReplies,
@@ -84,8 +150,9 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
 
       const createdWish = await res.json();
       router.push(`/create/${template.slug}/share?token=${createdWish.publicToken}`);
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong';
+      setError(message);
       setIsSubmitting(false);
     }
   };
@@ -111,7 +178,7 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
                 <label className="block text-sm font-medium text-charcoal mb-1.5">Who is this for? *</label>
                 <Input
                   {...register('recipientName')}
-                  placeholder="Recipient's Name"
+                  placeholder="Recipient's Name (e.g. Emma)"
                   error={errors.recipientName?.message}
                 />
               </div>
@@ -135,10 +202,93 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1.5">Your Message *</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-sm font-medium text-charcoal">Your Message *</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAiModal(!showAiModal);
+                    if (!aiSuggestions.length) {
+                      handleGenerateAiMessage();
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-plum hover:text-plum-light transition-colors bg-plum-50 hover:bg-plum-100 px-3 py-1 rounded-full border border-plum-200"
+                >
+                  <span>✨ Magic AI Wish Generator</span>
+                </button>
+              </div>
+
+              {/* AI Wish Assistant Card */}
+              {showAiModal && (
+                <div className="mb-4 p-5 bg-surface-raised rounded-2xl border-2 border-plum-200 shadow-soft animate-slide-down">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🪄</span>
+                      <h4 className="text-sm font-bold text-plum">AI Message Assistant</h4>
+                    </div>
+                    <Badge variant="gold">Instant Generator</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <label className="block text-xs font-medium text-charcoal-muted mb-1">Relationship</label>
+                      <select
+                        value={aiRelationship}
+                        onChange={(e) => setAiRelationship(e.target.value)}
+                        className="w-full text-xs rounded-xl border border-border-light bg-surface px-3 py-2 text-charcoal"
+                      >
+                        {RELATIONSHIPS.map((rel) => (
+                          <option key={rel} value={rel}>{rel}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-charcoal-muted mb-1">Tone</label>
+                      <select
+                        value={aiTone}
+                        onChange={(e) => setAiTone(e.target.value as 'heartfelt' | 'funny' | 'poetic' | 'short' | 'romantic' | 'inspirational')}
+                        className="w-full text-xs rounded-xl border border-border-light bg-surface px-3 py-2 text-charcoal"
+                      >
+                        {TONES.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label} ({t.desc})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="w-full mb-3"
+                    onClick={handleGenerateAiMessage}
+                    isLoading={isGeneratingAi}
+                  >
+                    ✨ Generate Suggestions for {recipientNameValue || 'Recipient'}
+                  </Button>
+
+                  {aiSuggestions.length > 0 && (
+                    <div className="space-y-2 mt-3">
+                      <p className="text-xs font-semibold text-charcoal-muted">Click a suggestion to use it:</p>
+                      {aiSuggestions.map((suggestion, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => applyAiSuggestion(suggestion)}
+                          className="p-3 bg-surface hover:bg-plum-50 rounded-xl border border-border-light hover:border-plum text-xs text-charcoal cursor-pointer transition-all duration-200 shadow-soft"
+                        >
+                          <p className="line-clamp-3">{suggestion}</p>
+                          <span className="text-[10px] font-bold text-plum mt-1 block">Click to apply →</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Textarea
                 {...register('message')}
-                placeholder="Write something nice..."
+                placeholder="Write your heartfelt message or use the AI Assistant..."
                 rows={5}
                 error={errors.message?.message}
               />

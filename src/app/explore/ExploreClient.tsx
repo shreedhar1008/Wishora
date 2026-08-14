@@ -1,27 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button, Card, Badge } from '@/components/ui';
 
-const SAMPLE_WISHES = [
-  { id: '1', token: 'demo-bday-1', emoji: '🎂', occasion: 'Birthday', recipient: 'Sarah', date: '2 days ago', title: 'Happy 30th Birthday!' },
-  { id: '2', token: 'demo-anniv-1', emoji: '🥂', occasion: 'Anniversary', recipient: 'Michael', date: '1 week ago', title: 'Happy Anniversary my love' },
-  { id: '3', token: 'demo-grad-1', emoji: '🎓', occasion: 'Graduation', recipient: 'Emily', date: '3 weeks ago', title: 'Congratulations on graduating!' },
-  { id: '4', token: 'demo-thanks-1', emoji: '🙏', occasion: 'Thank You', recipient: 'David', date: '1 month ago', title: 'Thanks for everything' },
-  { id: '5', token: 'demo-newbaby-1', emoji: '👶', occasion: 'New Baby', recipient: 'Jessica', date: '2 months ago', title: 'Welcome to the world' },
-  { id: '6', token: 'demo-wedding-1', emoji: '💍', occasion: 'Wedding', recipient: 'Alex', date: '3 months ago', title: 'Happy Wedding Day' },
-  { id: '7', token: 'demo-bday-2', emoji: '🎈', occasion: 'Birthday', recipient: 'John', date: '4 months ago', title: 'A special birthday wish' },
-  { id: '8', token: 'demo-thanks-2', emoji: '💌', occasion: 'Thank You', recipient: 'Mom & Dad', date: '5 months ago', title: 'For all your support' },
-  { id: '9', token: 'demo-anniv-2', emoji: '❤️', occasion: 'Anniversary', recipient: 'Priya', date: '6 months ago', title: '10 beautiful years' },
-  { id: '10', token: 'demo-love-1', emoji: '💖', occasion: 'Love', recipient: 'Chris', date: '1 day ago', title: 'Just thinking of you' },
-  { id: '11', token: 'demo-congrats-1', emoji: '🎉', occasion: 'Congrats', recipient: 'Amanda', date: '4 days ago', title: 'So proud of your new job!' },
-  { id: '12', token: 'demo-friend-1', emoji: '🤝', occasion: 'Friendship', recipient: 'Mark', date: '1 week ago', title: 'Best friends forever' },
-  { id: '13', token: 'demo-festival-1', emoji: '🎇', occasion: 'Festival', recipient: 'Family', date: '2 weeks ago', title: 'Happy Diwali everyone!' },
-  { id: '14', token: 'demo-mothersday-1', emoji: '🌸', occasion: 'Mother\'s Day', recipient: 'Mom', date: '3 months ago', title: 'To the best mom' },
-  { id: '15', token: 'demo-fathersday-1', emoji: '👔', occasion: 'Father\'s Day', recipient: 'Dad', date: '2 months ago', title: 'Happy Father\'s Day!' },
-  { id: '16', token: 'demo-newyear-1', emoji: '🎆', occasion: 'New Year', recipient: 'Everyone', date: '8 months ago', title: 'Happy New Year 2026!' },
-  { id: '17', token: 'demo-getwell-1', emoji: '🌻', occasion: 'Get Well', recipient: 'Sam', date: '5 days ago', title: 'Wishing you a speedy recovery' },
+interface ExploreWishItem {
+  id: string;
+  token: string;
+  emoji: string;
+  occasion: string;
+  recipient: string;
+  date: string;
+  title: string;
+}
+
+const DEFAULT_SAMPLE_WISHES: ExploreWishItem[] = [
+  { id: '1', token: 'demo-emma-bday', emoji: '🎂', occasion: 'Birthday', recipient: 'Emma', date: '2 days ago', title: 'Happy Birthday Emma!' },
+  { id: '2', token: 'demo-aarav-maya', emoji: '💑', occasion: 'Anniversary', recipient: 'Aarav & Maya', date: '5 days ago', title: 'Happy Anniversary my love' },
+  { id: '3', token: 'demo-dan-success', emoji: '🎉', occasion: 'Congratulations', recipient: 'Daniel', date: '1 week ago', title: 'Way to go, Daniel!' },
+  { id: '4', token: 'demo-mom-thanks', emoji: '🌸', occasion: 'Thank You', recipient: 'Mom', date: '12 hours ago', title: 'To the best Mom ever' },
+  { id: '5', token: 'demo-diwali-2026', emoji: '🪔', occasion: 'Festival', recipient: 'Family', date: '2 days ago', title: 'Happy Diwali!' },
+  { id: '6', token: 'demo-emma-bday', emoji: '🎈', occasion: 'Birthday', recipient: 'Sarah', date: '3 days ago', title: 'Happy 30th Birthday!' },
 ];
 
 const CATEGORIES = [
@@ -30,22 +29,49 @@ const CATEGORIES = [
   'Anniversary', 
   'Wedding', 
   'Love', 
-  'Congrats', 
+  'Congratulations', 
   'Thank You', 
   'Friendship', 
   'Festival', 
-  'Mother\'s Day', 
-  'Father\'s Day', 
-  'New Year', 
-  'Get Well'
 ];
+
 export default function ExploreClient() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [visibleCount, setVisibleCount] = useState(6);
+  const [wishesList, setWishesList] = useState<ExploreWishItem[]>(DEFAULT_SAMPLE_WISHES);
 
-  const filteredWishes = SAMPLE_WISHES.filter((wish) => {
+  useEffect(() => {
+    fetch('/api/wishes?limit=20')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.wishes) && data.wishes.length > 0) {
+          const fetchedItems: ExploreWishItem[] = data.wishes.map((w: { id?: string; publicToken: string; occasion?: string; recipientName?: string; title?: string }) => ({
+            id: w.id || w.publicToken,
+            token: w.publicToken,
+            emoji: '✨',
+            occasion: (w.occasion ? w.occasion.charAt(0).toUpperCase() + w.occasion.slice(1) : 'Special'),
+            recipient: w.recipientName || 'Special Someone',
+            date: 'Recent',
+            title: w.title || `Wish for ${w.recipientName || 'You'}`,
+          }));
+
+          // Merge fetched wishes with samples
+          const merged = [...fetchedItems, ...DEFAULT_SAMPLE_WISHES];
+          // Remove duplicates by token
+          const unique = merged.filter((item, index, self) => 
+            index === self.findIndex((t) => t.token === item.token)
+          );
+          setWishesList(unique);
+        }
+      })
+      .catch(() => {
+        // Fallback to default sample wishes
+      });
+  }, []);
+
+  const filteredWishes = wishesList.filter((wish) => {
     if (activeCategory === 'All') return true;
-    return wish.occasion === activeCategory;
+    return wish.occasion.toLowerCase() === activeCategory.toLowerCase();
   });
 
   const visibleWishes = filteredWishes.slice(0, visibleCount);
@@ -53,7 +79,7 @@ export default function ExploreClient() {
 
   const handleCategoryClick = (category: string) => {
     setActiveCategory(category);
-    setVisibleCount(6); // Reset visible count when changing categories
+    setVisibleCount(6);
   };
 
   const handleLoadMore = () => {

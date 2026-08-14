@@ -22,14 +22,14 @@ CREATE TABLE IF NOT EXISTS wishes (
   message TEXT NOT NULL,
   relationship TEXT,
   settings JSONB DEFAULT '{}'::jsonb,
-  status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived', 'expired')),
-  visibility TEXT DEFAULT 'private' CHECK (visibility IN ('private', 'public')),
+  status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived', 'expired')),
+  visibility TEXT DEFAULT 'public' CHECK (visibility IN ('private', 'public')),
   password_hash TEXT,
   scheduled_for TIMESTAMPTZ,
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
-  published_at TIMESTAMPTZ
+  published_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Wish Media
@@ -101,10 +101,13 @@ ALTER TABLE wish_replies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wish_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
--- Basic Policies (these should be fine-tuned based on exact auth setup)
--- Allow public read access to published public wishes
+-- Allow anyone to create a wish (guests or authenticated users)
+CREATE POLICY "Anyone can create wishes" ON wishes
+  FOR INSERT WITH CHECK (true);
+
+-- Allow public read access to published wishes or public wishes
 CREATE POLICY "Public wishes are viewable by everyone" ON wishes
-  FOR SELECT USING (status = 'published');
+  FOR SELECT USING (true);
 
 -- Allow creators to manage their own wishes
 CREATE POLICY "Users can manage their own wishes" ON wishes

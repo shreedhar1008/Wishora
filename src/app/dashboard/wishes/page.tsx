@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getDataAdapter } from '@/lib/db';
-import { getSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase-server';
 import { TEMPLATES } from '@/lib/templates/definitions';
 import MyWishesClient from './MyWishesClient';
 
@@ -16,7 +17,7 @@ export default async function MyWishesPage() {
   let userId = 'demo_user';
 
   if (isSupabaseConfigured()) {
-    const supabase = getSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       userId = user.id;

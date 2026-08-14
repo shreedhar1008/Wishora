@@ -3,8 +3,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Card, Badge, Button, Tabs, EmptyState } from '@/components/ui';
+import type { Wish } from '@/types';
 
-export default function MyWishesClient({ wishes }: { wishes: any[] }) {
+interface MyWishDisplayItem extends Wish {
+  emoji?: string;
+  views?: number;
+}
+
+export default function MyWishesClient({ wishes }: { wishes: MyWishDisplayItem[] }) {
   const [activeTab, setActiveTab] = useState('all');
 
   const tabs = [
@@ -35,7 +41,7 @@ export default function MyWishesClient({ wishes }: { wishes: any[] }) {
             <Card key={wish.id} className="p-5 border-none shadow-soft bg-surface flex flex-col group">
               <div className="flex justify-between items-start mb-4">
                 <div className="w-12 h-12 bg-lavender rounded-xl flex items-center justify-center text-2xl">
-                  {wish.emoji}
+                  {wish.emoji || '✨'}
                 </div>
                 <Badge 
                   className={
@@ -57,7 +63,7 @@ export default function MyWishesClient({ wishes }: { wishes: any[] }) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                    {wish.views}
+                    {wish.views || 0}
                   </span>
                 )}
               </div>
@@ -69,7 +75,7 @@ export default function MyWishesClient({ wishes }: { wishes: any[] }) {
                   </Link>
                 )}
                 {wish.isPublished && (
-                  <Link href={`/create/${wish.templateSlug}/share?token=${wish.publicToken}`} className="flex-1">
+                  <Link href={`/create/${wish.templateSlug || 'birthday-balloon-blast'}/share?token=${wish.publicToken}`} className="flex-1">
                     <Button variant="ghost" size="sm" className="w-full text-coral hover:text-coral-dark hover:bg-coral/10">Share</Button>
                   </Link>
                 )}
@@ -82,7 +88,7 @@ export default function MyWishesClient({ wishes }: { wishes: any[] }) {
           <EmptyState
             icon={<div className="text-6xl">✨</div>}
             title={`No ${activeTab === 'all' ? '' : activeTab} wishes found`}
-            description="You haven't created any wishes in this category yet."
+            description="You haven&apos;t created any wishes in this category yet."
             action={
               <Link href="/create" passHref>
                 <Button className="mt-4">Create a Wish</Button>

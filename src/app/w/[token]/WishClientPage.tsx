@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Button, Card } from '@/components/ui';
 import { TEMPLATES } from '@/lib/templates/definitions';
@@ -18,11 +19,11 @@ import {
 } from '@/components/interactions';
 import type { Wish, InteractionType, Template } from '@/types';
 
-// ---- Demo Wishes (fallback) ----
+// ---- Rich Demo Wishes (fallback dictionary) ----
 const DEMO_WISHES: Record<string, Partial<Wish> & { template?: Template }> = {
   demo_emma_birthday: {
     id: 'demo1',
-    publicToken: 'demo_emma_birthday',
+    publicToken: 'demo-emma-bday',
     templateSlug: 'birthday-balloon-blast',
     occasion: 'birthday',
     recipientName: 'Emma',
@@ -35,13 +36,47 @@ const DEMO_WISHES: Record<string, Partial<Wish> & { template?: Template }> = {
       enabledInteractions: ['confetti', 'balloon-pop'] as InteractionType[],
     },
     status: 'published',
-    visibility: 'private',
+    visibility: 'public',
     createdAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
   },
+  'demo-emma-bday': {
+    id: 'demo1',
+    publicToken: 'demo-emma-bday',
+    templateSlug: 'birthday-balloon-blast',
+    occasion: 'birthday',
+    recipientName: 'Emma',
+    senderName: 'Maya',
+    message: "Today is a reminder of how much light you bring into the lives around you. I hope this year gives you many reasons to smile. You deserve all the happiness in the world, and I'm so grateful to have you in my life. Here's to another amazing year! 🎂✨",
+    relationship: 'Best Friend',
+    settings: {
+      theme: 'playful',
+      animationIntensity: 'vibrant',
+      enabledInteractions: ['confetti', 'balloon-pop'] as InteractionType[],
+    },
+    status: 'published',
+    visibility: 'public',
+    createdAt: new Date().toISOString(),
+    publishedAt: new Date().toISOString(),
+  },
+  'demo-bday-1': {
+    id: 'demo_bday_1',
+    publicToken: 'demo-bday-1',
+    templateSlug: 'birthday-balloon-blast',
+    occasion: 'birthday',
+    recipientName: 'Sarah',
+    senderName: 'Alex',
+    title: 'Happy 30th Birthday!',
+    message: "Wishing you the happiest 30th birthday! May this decade bring you bold adventures, boundless happiness, and dreams come true! 🎂✨",
+    status: 'published',
+    visibility: 'public',
+    settings: {
+      enabledInteractions: ['confetti', 'balloon-pop'] as InteractionType[],
+    },
+  },
   demo_aarav_anniversary: {
     id: 'demo2',
-    publicToken: 'demo_aarav_anniversary',
+    publicToken: 'demo-aarav-maya',
     templateSlug: 'our-story',
     occasion: 'anniversary',
     recipientName: 'Aarav & Maya',
@@ -58,9 +93,43 @@ const DEMO_WISHES: Record<string, Partial<Wish> & { template?: Template }> = {
     createdAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
   },
+  'demo-aarav-maya': {
+    id: 'demo2',
+    publicToken: 'demo-aarav-maya',
+    templateSlug: 'our-story',
+    occasion: 'anniversary',
+    recipientName: 'Aarav & Maya',
+    senderName: 'With love',
+    message: "Every moment with you is a chapter in the most beautiful story ever written. From the first hello to a thousand sunsets together, every day with you feels like a new adventure. Happy Anniversary to the love of my life. 💕",
+    relationship: 'Partner',
+    settings: {
+      theme: 'romantic',
+      animationIntensity: 'moderate',
+      enabledInteractions: ['envelope', 'blooming-roses'] as InteractionType[],
+    },
+    status: 'published',
+    visibility: 'public',
+    createdAt: new Date().toISOString(),
+    publishedAt: new Date().toISOString(),
+  },
+  'demo-anniv-1': {
+    id: 'demo_anniv_1',
+    publicToken: 'demo-anniv-1',
+    templateSlug: 'our-story',
+    occasion: 'anniversary',
+    recipientName: 'Michael',
+    senderName: 'Elena',
+    title: 'Happy Anniversary my love',
+    message: "Celebrating another year of shared dreams, laughter, and unbreakable love. Happy Anniversary! 💕",
+    status: 'published',
+    visibility: 'public',
+    settings: {
+      enabledInteractions: ['envelope', 'blooming-roses'] as InteractionType[],
+    },
+  },
   demo_daniel_congrats: {
     id: 'demo3',
-    publicToken: 'demo_daniel_congrats',
+    publicToken: 'demo-dan-success',
     templateSlug: 'congratulations-confetti',
     occasion: 'congratulations',
     recipientName: 'Daniel',
@@ -77,6 +146,55 @@ const DEMO_WISHES: Record<string, Partial<Wish> & { template?: Template }> = {
     createdAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
   },
+  'demo-dan-success': {
+    id: 'demo3',
+    publicToken: 'demo-dan-success',
+    templateSlug: 'congratulations-confetti',
+    occasion: 'congratulations',
+    recipientName: 'Daniel',
+    senderName: 'Sofia',
+    message: "You did it! All those late nights and hard work have paid off. I'm so incredibly proud of you. This is just the beginning of amazing things to come. The world better get ready! 🎉🏆",
+    relationship: 'Friend',
+    settings: {
+      theme: 'festive',
+      animationIntensity: 'vibrant',
+      enabledInteractions: ['confetti', 'gift-box'] as InteractionType[],
+    },
+    status: 'published',
+    visibility: 'public',
+    createdAt: new Date().toISOString(),
+    publishedAt: new Date().toISOString(),
+  },
+  'demo-mom-thanks': {
+    id: 'demo4',
+    publicToken: 'demo-mom-thanks',
+    templateSlug: 'thank-you-mom',
+    occasion: 'thank-you',
+    recipientName: 'Mom',
+    senderName: 'Chloe',
+    title: 'To the best Mom ever',
+    message: "Thank you for your endless love, patience, and guidance. You are the best mom in the world and I appreciate everything you do for us every single day. 🌸",
+    status: 'published',
+    visibility: 'public',
+    settings: {
+      enabledInteractions: ['blooming-roses', 'envelope'] as InteractionType[],
+    },
+  },
+  'demo-diwali-2026': {
+    id: 'demo5',
+    publicToken: 'demo-diwali-2026',
+    templateSlug: 'diwali-glow',
+    occasion: 'festival',
+    recipientName: 'Family',
+    senderName: 'The Sharma Family',
+    title: 'Happy Diwali!',
+    message: "May the festival of lights bring joy, prosperity, and happiness to your home. Wishing you and your family a sparkling Diwali! 🪔✨",
+    status: 'published',
+    visibility: 'public',
+    settings: {
+      enabledInteractions: ['confetti', 'gift-box'] as InteractionType[],
+    },
+  },
 };
 
 type WishPhase = 'loading' | 'intro' | 'interaction' | 'message' | 'reactions';
@@ -84,8 +202,23 @@ type WishPhase = 'loading' | 'intro' | 'interaction' | 'message' | 'reactions';
 export default function WishClientPage({ token, serverWish }: { token: string, serverWish?: Partial<Wish> | null }) {
   const shouldReduceMotion = useReducedMotion();
 
-  const [wish, setWish] = React.useState<(Partial<Wish> & { template?: Template }) | null>(serverWish || null);
-  const [template, setTemplate] = React.useState<Template | null>(null);
+  const [wish, setWish] = React.useState<(Partial<Wish> & { template?: Template }) | null>(() => {
+    if (serverWish) return serverWish;
+    if (DEMO_WISHES[token]) return DEMO_WISHES[token];
+    return null;
+  });
+
+  const [template, setTemplate] = React.useState<Template | null>(() => {
+    if (serverWish) {
+      return TEMPLATES.find((t) => t.id === serverWish.templateId || t.slug === serverWish.templateSlug) || null;
+    }
+    if (DEMO_WISHES[token]) {
+      const demo = DEMO_WISHES[token];
+      return TEMPLATES.find((t) => t.slug === demo.templateSlug || t.id === demo.templateId) || null;
+    }
+    return null;
+  });
+
   const [phase, setPhase] = React.useState<WishPhase>('loading');
   const [showConfetti, setShowConfetti] = React.useState(false);
   const [showHearts, setShowHearts] = React.useState(false);
@@ -95,53 +228,58 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
   const [replySent, setReplySent] = React.useState(false);
   const [notFound, setNotFound] = React.useState(false);
 
-  // Load wish
+  // Load wish if not in state yet
   React.useEffect(() => {
-    if (serverWish) {
-      const tpl = TEMPLATES.find((t) => t.id === serverWish.templateId || t.slug === serverWish.templateSlug) || null;
-      setTemplate(tpl);
-      setTimeout(() => setPhase('intro'), 1500);
-      return;
+    if (wish) {
+      const timer = setTimeout(() => setPhase('intro'), 1000);
+      return () => clearTimeout(timer);
     }
 
-    // Check demo wishes first
-    if (DEMO_WISHES[token]) {
-      const demoWish = DEMO_WISHES[token];
-      const tpl = TEMPLATES.find((t) => t.slug === demoWish.templateSlug) || null;
-      setWish(demoWish);
-      setTemplate(tpl);
-      setTimeout(() => setPhase('intro'), 1500);
-      return;
-    }
-
-    // Check localStorage for published wishes (demo mode fallback)
-    try {
-      const stored = JSON.parse(localStorage.getItem('wishora-published-wishes') || '[]');
-      const found = stored.find((w: Partial<Wish>) => w.publicToken === token);
-      if (found) {
-        const tpl = TEMPLATES.find((t) => t.slug === found.templateSlug) || found.template || null;
-        setWish(found);
-        setTemplate(tpl);
-        setTimeout(() => setPhase('intro'), 1500);
-      } else {
-        setTimeout(() => setNotFound(true), 1000);
-      }
-    } catch {
-      setTimeout(() => setNotFound(true), 1000);
-    }
-  }, [token, serverWish]);
+    // Fetch from API in case server rendering missed it
+    fetch(`/api/wishes/${token}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Not found');
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.publicToken) {
+          setWish(data);
+          const tpl = TEMPLATES.find((t) => t.id === data.templateId || t.slug === data.templateSlug) || null;
+          setTemplate(tpl);
+          setPhase('intro');
+        } else {
+          setNotFound(true);
+        }
+      })
+      .catch(() => {
+        // Check localStorage for demo wishes
+        try {
+          const stored = JSON.parse(localStorage.getItem('wishora-published-wishes') || '[]');
+          const found = stored.find((w: Partial<Wish>) => w.publicToken === token);
+          if (found) {
+            const tpl = TEMPLATES.find((t) => t.slug === found.templateSlug) || found.template || null;
+            setWish(found);
+            setTemplate(tpl);
+            setPhase('intro');
+          } else {
+            setNotFound(true);
+          }
+        } catch {
+          setNotFound(true);
+        }
+      });
+  }, [token, wish]);
 
   // Track view
   React.useEffect(() => {
-    if (wish && wish.id) {
-      const viewKey = `wishora-viewed-${wish.id}`;
-      if (!sessionStorage.getItem(viewKey)) {
+    if (token) {
+      const viewKey = `wishora-viewed-${token}`;
+      if (typeof window !== 'undefined' && !sessionStorage.getItem(viewKey)) {
         sessionStorage.setItem(viewKey, 'true');
-        // In a real app, this would call the API to increment view count
-        fetch(`/api/wishes/${wish.id}/view`, { method: 'POST' }).catch(() => {});
+        fetch(`/api/wishes/${token}/views`, { method: 'POST' }).catch(() => {});
       }
     }
-  }, [wish]);
+  }, [token]);
 
   const handleOpen = () => {
     setPhase('interaction');
@@ -150,14 +288,14 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
       setTimeout(() => setShowConfetti(false), 4000);
     }
     // Auto-progress to message after interaction
-    setTimeout(() => setPhase('message'), 2000);
+    setTimeout(() => setPhase('message'), 2200);
   };
 
   const handleInteractionComplete = () => {
     setPhase('message');
   };
 
-  const handleReaction = (type: string) => {
+  const handleReaction = async (type: string) => {
     setSelectedReactions((prev) => {
       const next = new Set(prev);
       if (next.has(type)) {
@@ -167,16 +305,39 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
       }
       return next;
     });
+
     if (!shouldReduceMotion) {
       setShowHearts(true);
       setTimeout(() => setShowHearts(false), 2000);
     }
+
+    try {
+      await fetch(`/api/wishes/${token}/reactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reactionType: type }),
+      });
+    } catch {
+      // Non-blocking UI
+    }
   };
 
-  const handleReply = () => {
+  const handleReply = async () => {
     if (!replyMessage.trim()) return;
     setReplySent(true);
-    // In real app, send to API
+
+    try {
+      await fetch(`/api/wishes/${token}/replies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          displayName: replyName.trim() || 'Anonymous',
+          body: replyMessage.trim(),
+        }),
+      });
+    } catch {
+      // Non-blocking UI
+    }
   };
 
   const handleReplay = () => {
@@ -195,9 +356,9 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
           <p className="text-charcoal-muted mb-6">
             This wish may have been deleted, expired, or the link might be incorrect.
           </p>
-          <a href="/">
+          <Link href="/">
             <Button variant="primary">Go to Wishora →</Button>
-          </a>
+          </Link>
         </Card>
       </div>
     );
@@ -244,13 +405,6 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
 
       {/* Hearts */}
       <HeartAnimation trigger={showHearts} />
-
-      {/* noindex for private wishes */}
-      {wish?.visibility === 'private' && (
-        <head>
-          <meta name="robots" content="noindex, nofollow" />
-        </head>
-      )}
 
       <AnimatePresence mode="wait">
         {/* ---- INTRO PHASE ---- */}
@@ -309,7 +463,7 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
             className="min-h-screen flex items-center justify-center p-4"
           >
             <div className="max-w-md w-full">
-              {interactions.includes('balloon-pop') && (
+              {(interactions.includes('balloon-pop') || interactions.includes('balloons')) && (
                 <BalloonPop onAllPopped={handleInteractionComplete} />
               )}
               {interactions.includes('candle-blow') && (
@@ -318,7 +472,7 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
                   onBlown={handleInteractionComplete}
                 />
               )}
-              {interactions.includes('gift-box') && (
+              {(interactions.includes('gift-box') || interactions.includes('button')) && (
                 <GiftBoxReveal>
                   <div className="text-center p-4">
                     <span className="text-4xl block mb-2">🎉</span>
@@ -343,12 +497,17 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
               )}
               {/* Auto-advance if no specific interaction */}
               {!interactions.includes('balloon-pop') &&
+                !interactions.includes('balloons') &&
                 !interactions.includes('candle-blow') &&
                 !interactions.includes('gift-box') &&
+                !interactions.includes('button') &&
                 !interactions.includes('envelope') &&
                 !interactions.includes('blooming-roses') && (
                 <div className="text-center">
                   <span className="text-6xl block mb-4 animate-bounce-gentle">🎉</span>
+                  <Button variant="ghost" onClick={handleInteractionComplete} className="mt-3">
+                    Tap to see wish →
+                  </Button>
                 </div>
               )}
             </div>
@@ -500,15 +659,14 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    if (typeof window !== 'undefined' && window.navigator) {
-                      const nav = window.navigator as any;
-                      if (nav.share) {
-                        nav.share({
+                    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+                      if (navigator.share) {
+                        navigator.share({
                           title: 'A magical wish from Wishora',
                           url: window.location.href,
-                        });
-                      } else {
-                        nav.clipboard.writeText(window.location.href);
+                        }).catch(() => {});
+                      } else if (navigator.clipboard) {
+                        navigator.clipboard.writeText(window.location.href);
                       }
                     }
                   }}
@@ -519,15 +677,15 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
 
               {/* Wishora Branding */}
               <div className="text-center mt-12 pb-8">
-                <a href="/" className="inline-flex items-center gap-2 text-charcoal-muted hover:text-plum transition-colors">
+                <Link href="/" className="inline-flex items-center gap-2 text-charcoal-muted hover:text-plum transition-colors">
                   <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
                     <circle cx="16" cy="16" r="14" fill="currentColor" opacity="0.15" />
                     <path d="M16 8C12 8 9 11 9 14.5C9 20 16 25 16 25C16 25 23 20 23 14.5C23 11 20 8 16 8Z" fill="currentColor" opacity="0.3" />
                   </svg>
                   <span className="text-xs font-medium">Made with Wishora</span>
-                </a>
+                </Link>
                 <p className="text-xs text-charcoal-muted mt-2">
-                  <a href="/create" className="hover:text-plum transition-colors">Create your own wish →</a>
+                  <Link href="/create" className="hover:text-plum transition-colors">Create your own wish →</Link>
                 </p>
               </div>
             </div>

@@ -7,15 +7,22 @@ let wishes: Wish[] = [
   {
     id: 'wish_demo_1',
     ownerId: 'demo_user',
-    templateId: 'tpl_bday_1',
+    templateId: 'birthday-balloon-blast',
+    templateSlug: 'birthday-balloon-blast',
+    occasion: 'birthday',
+    recipientName: 'Emma',
+    senderName: 'Sarah',
     title: 'Happy Birthday Emma!',
     message: 'Wishing you a day filled with joy, laughter, and endless surprises! May all your dreams take flight this year.',
     signature: 'With love, Sarah',
     publicToken: 'demo-emma-bday',
     isPublic: true,
     isPublished: true,
+    status: 'published',
+    visibility: 'public',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     customPalette: {
       primary: '#FF4B4B',
       secondary: '#4B9AFF',
@@ -35,15 +42,22 @@ let wishes: Wish[] = [
   {
     id: 'wish_demo_2',
     ownerId: 'demo_user',
-    templateId: 'tpl_anniv_1',
+    templateId: 'our-story',
+    templateSlug: 'our-story',
+    occasion: 'anniversary',
+    recipientName: 'Aarav & Maya',
+    senderName: 'Aarav',
     title: 'Happy Anniversary Aarav & Maya',
     message: 'Every chapter with you is my favorite. Here is to our beautiful story and the many pages yet to be written. Cheers to 5 wonderful years!',
     signature: 'Forever yours, Aarav',
     publicToken: 'demo-aarav-maya',
     isPublic: true,
     isPublished: true,
+    status: 'published',
+    visibility: 'public',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
     customPalette: null,
     images: [],
     musicUrl: null,
@@ -57,15 +71,22 @@ let wishes: Wish[] = [
   {
     id: 'wish_demo_3',
     ownerId: 'demo_user',
-    templateId: 'tpl_celeb_1',
+    templateId: 'congratulations-confetti',
+    templateSlug: 'congratulations-confetti',
+    occasion: 'congratulations',
+    recipientName: 'Daniel',
+    senderName: 'Uncle John',
     title: 'Way to go, Daniel!',
     message: 'You did it! I am incredibly proud of your hard work and amazing success on passing the bar exam. The sky is the limit!',
     signature: 'Best, Uncle John',
     publicToken: 'demo-dan-success',
     isPublic: true,
     isPublished: true,
+    status: 'published',
+    visibility: 'public',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
+    publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
     customPalette: null,
     images: [],
     musicUrl: null,
@@ -79,15 +100,22 @@ let wishes: Wish[] = [
   {
     id: 'wish_demo_4',
     ownerId: 'demo_user',
-    templateId: 'tpl_fam_1',
+    templateId: 'thank-you-mom',
+    templateSlug: 'thank-you-mom',
+    occasion: 'thank-you',
+    recipientName: 'Mom',
+    senderName: 'Chloe',
     title: 'To the best Mom ever',
     message: 'Thank you for your endless love, patience, and guidance. You are the best mom in the world and I appreciate everything you do for us every single day.',
     signature: 'Love always, Chloe',
     publicToken: 'demo-mom-thanks',
     isPublic: true,
     isPublished: true,
+    status: 'published',
+    visibility: 'public',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+    publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
     customPalette: null,
     images: [],
     musicUrl: null,
@@ -101,15 +129,22 @@ let wishes: Wish[] = [
   {
     id: 'wish_demo_5',
     ownerId: 'demo_user',
-    templateId: 'tpl_fest_1',
+    templateId: 'diwali-glow',
+    templateSlug: 'diwali-glow',
+    occasion: 'festival',
+    recipientName: 'Family',
+    senderName: 'The Sharma Family',
     title: 'Happy Diwali!',
     message: 'May the festival of lights bring joy, prosperity, and happiness to your home. Wishing you and your family a sparkling Diwali!',
     signature: 'The Sharma Family',
     publicToken: 'demo-diwali-2026',
     isPublic: true,
     isPublished: true,
+    status: 'published',
+    visibility: 'public',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     customPalette: null,
     images: [],
     musicUrl: null,
@@ -145,34 +180,65 @@ let views: { id: string; wishId: string; createdAt: string }[] = [
 export class DemoDataAdapter implements DataAdapter {
   
   async createWish(wishData: Partial<Wish>): Promise<Wish> {
+    const isPublished = wishData.isPublished !== false;
+    const isPublic = wishData.isPublic ?? true;
+    const status = wishData.status || (isPublished ? 'published' : 'draft');
+    const visibility = isPublic ? 'public' : 'private';
+
     const newWish: Wish = {
       id: `wish_${Date.now()}`,
       ownerId: wishData.ownerId || 'demo_user',
-      templateId: wishData.templateId || 'tpl_bday_1',
-      title: wishData.title || '',
+      templateId: wishData.templateId || wishData.templateSlug || 'birthday-balloon-blast',
+      templateSlug: wishData.templateSlug || wishData.templateId || 'birthday-balloon-blast',
+      occasion: wishData.occasion || 'birthday',
+      recipientName: wishData.recipientName || 'Friend',
+      senderName: wishData.senderName || undefined,
+      relationship: wishData.relationship || undefined,
+      title: wishData.title || undefined,
       message: wishData.message || '',
-      signature: wishData.signature || '',
+      signature: wishData.signature || (wishData.senderName ? `With love, ${wishData.senderName}` : undefined),
       publicToken: wishData.publicToken || generateToken(16),
-      isPublic: wishData.isPublic ?? false,
-      isPublished: wishData.isPublished ?? false,
+      isPublic: isPublic,
+      isPublished: isPublished,
+      status: status,
+      visibility: visibility,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      publishedAt: isPublished ? new Date().toISOString() : undefined,
       customPalette: wishData.customPalette || null,
       images: wishData.images || [],
       musicUrl: wishData.musicUrl || null,
-      settings: wishData.settings || {
-        allowReactions: true,
-        allowReplies: true,
-        requireNameForReply: true,
-        notifyOnActivity: false
+      settings: {
+        allowReactions: wishData.settings?.allowReactions !== false,
+        allowReplies: wishData.settings?.allowReplies !== false,
+        requireNameForReply: wishData.settings?.requireNameForReply === true,
+        notifyOnActivity: wishData.settings?.notifyOnActivity === true,
+        theme: wishData.settings?.theme,
+        animationIntensity: wishData.settings?.animationIntensity,
+        enabledInteractions: wishData.settings?.enabledInteractions,
+        countdownDate: wishData.settings?.countdownDate,
       }
     };
-    wishes.push(newWish);
+    wishes.unshift(newWish);
     return newWish;
   }
 
   async getWishByToken(publicToken: string): Promise<Wish | null> {
-    return wishes.find(w => w.publicToken === publicToken && w.isPublished) || null;
+    // Also match alternative demo token aliases
+    const found = wishes.find(w => w.publicToken === publicToken);
+    if (found) return found;
+
+    if (publicToken === 'demo_emma_birthday' || publicToken === 'demo-bday-1') {
+      return wishes.find(w => w.publicToken === 'demo-emma-bday') || null;
+    }
+    if (publicToken === 'demo_aarav_anniversary' || publicToken === 'demo-anniv-1') {
+      return wishes.find(w => w.publicToken === 'demo-aarav-maya') || null;
+    }
+    if (publicToken === 'demo_daniel_congrats' || publicToken === 'demo-congrats-1') {
+      return wishes.find(w => w.publicToken === 'demo-dan-success') || null;
+    }
+
+    return null;
   }
 
   async getWishById(id: string): Promise<Wish | null> {
@@ -205,14 +271,14 @@ export class DemoDataAdapter implements DataAdapter {
   }
 
   async publishWish(id: string): Promise<Wish> {
-    return this.updateWish(id, { isPublished: true });
+    return this.updateWish(id, { isPublished: true, status: 'published', publishedAt: new Date().toISOString() });
   }
 
   async getPublicWishes(options: { page: number; limit: number; occasion?: string | null }): Promise<{ wishes: Wish[]; total: number }> {
     const { page, limit, occasion } = options;
     const publicWishes = wishes.filter(w => 
       w.isPublic && 
-      w.isPublished && 
+      (w.isPublished || w.status === 'published') && 
       (!occasion || w.occasion === occasion)
     )
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -261,7 +327,7 @@ export class DemoDataAdapter implements DataAdapter {
 
   async addView(wishId: string, deviceType?: string, referrer?: string): Promise<void> {
     views.push({
-      id: `view_${Date.now()}`,
+      id: `view_${Date.now()}_${deviceType || 'generic'}_${referrer || 'direct'}`,
       wishId,
       createdAt: new Date().toISOString()
     });

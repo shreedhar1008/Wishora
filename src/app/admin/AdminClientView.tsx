@@ -19,17 +19,14 @@ export default function AdminClientView({
   stats: AdminStats;
 }) {
   const [activeTab, setActiveTab] = React.useState('templates');
-  // If Supabase is configured, middleware guarantees we are admin.
-  // Otherwise, use the fake login for demo purposes.
-  const [isAuthenticated, setIsAuthenticated] = React.useState(isSupabaseConfigured);
-  const [adminKey, setAdminKey] = React.useState('');
-
-  React.useEffect(() => {
-    if (!isSupabaseConfigured) {
-      const stored = localStorage.getItem('wishora-admin-auth');
-      if (stored === 'true') setIsAuthenticated(true);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(() => {
+    if (isSupabaseConfigured) return true;
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('wishora-admin-auth') === 'true';
     }
-  }, [isSupabaseConfigured]);
+    return false;
+  });
+  const [adminKey, setAdminKey] = React.useState('');
 
   const handleLogin = () => {
     if (adminKey === 'admin' || adminKey === 'wishora-admin') {

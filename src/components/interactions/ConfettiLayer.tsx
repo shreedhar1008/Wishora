@@ -10,19 +10,33 @@ export interface ConfettiLayerProps {
   particleCount?: number;
 }
 
+interface ConfettiParticle {
+  id: number;
+  x: number;
+  color: string;
+  delay: number;
+  duration: number;
+  size: number;
+  shape: "circle" | "square";
+}
+
 export const ConfettiLayer: React.FC<ConfettiLayerProps> = ({
   trigger,
   colors = ["#ff5e7e", "#ffb84d", "#7c5bd7", "#4dc2ff"],
   duration = 3000,
   particleCount = 60,
 }) => {
-  const [particles, setParticles] = useState<any[]>([]);
+  const [particles, setParticles] = useState<ConfettiParticle[]>([]);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (trigger && !prefersReducedMotion) {
-      const newParticles = Array.from({ length: particleCount }).map((_, i) => ({
-        id: i,
+    if (!trigger || prefersReducedMotion) {
+      return;
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      const newParticles: ConfettiParticle[] = Array.from({ length: particleCount }).map((_, i) => ({
+        id: Date.now() + i,
         x: Math.random() * 100,
         color: colors[i % colors.length],
         delay: Math.random() * 0.5,
@@ -31,10 +45,13 @@ export const ConfettiLayer: React.FC<ConfettiLayerProps> = ({
         shape: Math.random() > 0.5 ? "circle" : "square",
       }));
       setParticles(newParticles);
+    });
 
-      const timer = setTimeout(() => setParticles([]), duration);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => setParticles([]), duration);
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timer);
+    };
   }, [trigger, colors, duration, particleCount, prefersReducedMotion]);
 
   if (!trigger || prefersReducedMotion || particles.length === 0) return null;

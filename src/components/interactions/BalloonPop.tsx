@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 
 export interface BalloonPopProps {
@@ -16,6 +16,10 @@ export const BalloonPop: React.FC<BalloonPopProps> = ({
 }) => {
   const [popped, setPopped] = useState<number[]>([]);
   const prefersReducedMotion = useReducedMotion();
+
+  const balloonDurations = useMemo(() => {
+    return Array.from({ length: balloonCount }).map((_, i) => 2 + ((i * 37) % 10) / 10);
+  }, [balloonCount]);
 
   const handlePop = (index: number) => {
     if (popped.includes(index)) return;
@@ -56,7 +60,7 @@ export const BalloonPop: React.FC<BalloonPopProps> = ({
                 transition={{
                   y: prefersReducedMotion
                     ? {}
-                    : { duration: 2 + Math.random(), repeat: Infinity, ease: "easeInOut" },
+                    : { duration: balloonDurations[i] || 2.5, repeat: Infinity, ease: "easeInOut" },
                 }}
                 exit={{ scale: 1.5, opacity: 0, transition: { duration: 0.2 } }}
                 aria-label="Pop balloon"

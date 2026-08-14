@@ -8,24 +8,39 @@ export interface HeartAnimationProps {
   count?: number;
 }
 
+interface HeartItem {
+  id: number;
+  x: number;
+  size: number;
+  duration: number;
+  delay: number;
+}
+
 export const HeartAnimation: React.FC<HeartAnimationProps> = ({ trigger, count = 20 }) => {
-  const [hearts, setHearts] = useState<any[]>([]);
+  const [hearts, setHearts] = useState<HeartItem[]>([]);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (trigger && !prefersReducedMotion) {
-      const newHearts = Array.from({ length: count }).map((_, i) => ({
-        id: i,
+    if (!trigger || prefersReducedMotion) {
+      return;
+    }
+
+    const frameId = requestAnimationFrame(() => {
+      const newHearts: HeartItem[] = Array.from({ length: count }).map((_, i) => ({
+        id: Date.now() + i,
         x: Math.random() * 100,
         size: Math.random() * 20 + 10,
         duration: Math.random() * 3 + 3,
         delay: Math.random() * 0.5,
       }));
       setHearts(newHearts);
+    });
 
-      const timer = setTimeout(() => setHearts([]), 6000);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => setHearts([]), 6000);
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timer);
+    };
   }, [trigger, count, prefersReducedMotion]);
 
   if (!trigger || prefersReducedMotion || hearts.length === 0) return null;

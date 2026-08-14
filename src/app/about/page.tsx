@@ -60,7 +60,7 @@ export default function AboutPage() {
             <h3 className="text-2xl font-bold text-charcoal mb-2">Shreedhar Shiragur</h3>
             <p className="text-lg text-plum font-medium mb-6">Creator & Full-Stack Developer</p>
             <p className="text-charcoal-muted mb-8 leading-relaxed">
-              I built Wishora to bring more meaning and interaction to our digital greetings. As a sole developer, I poured my passion for beautifully crafted user experiences into every template and feature. Let's connect!
+              I built Wishora to bring more meaning and interaction to our digital greetings. As a sole developer, I poured my passion for beautifully crafted user experiences into every template and feature. Let&apos;s connect!
             </p>
             
             <div className="w-full border-t border-border-light pt-6">
