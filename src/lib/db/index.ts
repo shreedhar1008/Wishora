@@ -1,3 +1,4 @@
+import { SupabaseClient } from '@supabase/supabase-js';
 import { DataAdapter } from './adapter';
 import { DemoDataAdapter } from '../demo/data';
 import { SupabaseAdapter } from './supabase-adapter';
@@ -12,9 +13,12 @@ import { isSupabaseConfigured } from '../supabase';
 let demoAdapterInstance: DemoDataAdapter | null = null;
 let supabaseAdapterInstance: SupabaseAdapter | null = null;
 
-export function getDataAdapter(): DataAdapter {
+export function getDataAdapter(client?: SupabaseClient): DataAdapter {
   // Production mode: use Supabase
   if (isSupabaseConfigured()) {
+    if (client) {
+      return new SupabaseAdapter(client);
+    }
     if (!supabaseAdapterInstance) {
       supabaseAdapterInstance = new SupabaseAdapter();
     }

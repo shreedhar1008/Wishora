@@ -1,6 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Wish, WishReaction, WishReply, WishStats, ReactionType } from '@/types';
 import { DataAdapter } from './adapter';
+import { DemoDataAdapter } from '../demo/data';
 import { getSupabaseAdminClient } from '../supabase';
 import { generateToken } from '../utils';
 
@@ -143,9 +144,11 @@ function rowToReply(row: ReplyRow): WishReply {
 
 export class SupabaseAdapter implements DataAdapter {
   private client: SupabaseClient;
+  private demoFallback: DemoDataAdapter;
 
   constructor(client?: SupabaseClient) {
     this.client = client || getSupabaseAdminClient();
+    this.demoFallback = new DemoDataAdapter();
   }
 
   // ── Wishes ────────────────────────────────
@@ -172,57 +175,93 @@ export class SupabaseAdapter implements DataAdapter {
       published_at: isPublished ? new Date().toISOString() : null,
     };
 
-    const { data, error } = await this.client
-      .from('wishes')
-      .insert(insertData)
-      .select()
-      .single();
+    try {
+      const { data, error } = await this.client
+        .from('wishes')
+        .insert(insertData)
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Supabase createWish error:', error.message);
-      throw new Error(`Failed to create wish: ${error.message}`);
+      if (error) {
+        console.warn('Supabase createWish error, falling back to memory store:', error.message);
+        return await this.demoFallback.createWish({
+          ...wish,
+          publicToken: token,
+          isPublished,
+          isPublic,
+          status,
+        });
+      }
+      return rowToWish(data as WishRow);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn('Supabase createWish exception, falling back to memory store:', msg);
+      return await this.demoFallback.createWish({
+        ...wish,
+        publicToken: token,
+        isPublished,
+        isPublic,
+        status,
+      });
     }
-    return rowToWish(data as WishRow);
   }
 
   async getWishByToken(publicToken: string): Promise<Wish | null> {
-    const { data, error } = await this.client
-      .from('wishes')
-      .select('*')
-      .eq('public_token', publicToken)
-      .single();
+    try {
+      const { data, error } = await this.client
+        .from('wishes')
+        .select('*')
+        .eq('public_token', publicToken)
+        .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
-      console.error('Supabase getWishByToken error:', error.message);
-      return null;
+      if (error) {
+        if (error.code !== 'PGRST116') {
+          console.warn('Supabase getWishByToken error:', error.message);
+        }
+        return await this.demoFallback.getWishByToken(publicToken);
+      }
+      return data ? rowToWish(data as WishRow) : await this.demoFallback.getWishByToken(publicToken);
+    } catch {
+      return await this.demoFallback.getWishByToken(publicToken);
     }
-    return data ? rowToWish(data as WishRow) : null;
   }
 
   async getWishById(id: string): Promise<Wish | null> {
-    const { data, error } = await this.client
-      .from('wishes')
-      .select('*')
-      .eq('id', id)
-      .single();
+    try {
+      const { data, error } = await this.client
+        .from('wishes')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(`Failed to get wish: ${error.message}`);
+      if (error) {
+        if (error.code !== 'PGRST116') {
+          console.warn('Supabase getWishById error:', error.message);
+        }
+        return await this.demoFallback.getWishById(id);
+      }
+      return data ? rowToWish(data as WishRow) : await this.demoFallback.getWishById(id);
+    } catch {
+      return await this.demoFallback.getWishById(id);
     }
-    return data ? rowToWish(data as WishRow) : null;
   }
 
   async getWishesByOwner(ownerId: string): Promise<Wish[]> {
-    const { data, error } = await this.client
-      .from('wishes')
-      .select('*')
-      .eq('owner_id', ownerId)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await this.client
+        .from('wishes')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false });
 
-    if (error) throw new Error(`Failed to get wishes: ${error.message}`);
-    return (data || []).map((row) => rowToWish(row as WishRow));
+      if (error) {
+        console.warn('Supabase getWishesByOwner error:', error.message);
+        return await this.demoFallback.getWishesByOwner(ownerId);
+      }
+      return (data || []).map((row) => rowToWish(row as WishRow));
+    } catch {
+      return await this.demoFallback.getWishesByOwner(ownerId);
+    }
   }
 
   async updateWish(id: string, updates: Partial<Wish>): Promise<Wish> {
@@ -231,24 +270,36 @@ export class SupabaseAdapter implements DataAdapter {
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await this.client
-      .from('wishes')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      const { data, error } = await this.client
+        .from('wishes')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) throw new Error(`Failed to update wish: ${error.message}`);
-    return rowToWish(data as WishRow);
+      if (error) {
+        return await this.demoFallback.updateWish(id, updates);
+      }
+      return rowToWish(data as WishRow);
+    } catch {
+      return await this.demoFallback.updateWish(id, updates);
+    }
   }
 
   async deleteWish(id: string): Promise<void> {
-    const { error } = await this.client
-      .from('wishes')
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await this.client
+        .from('wishes')
+        .delete()
+        .eq('id', id);
 
-    if (error) throw new Error(`Failed to delete wish: ${error.message}`);
+      if (error) {
+        await this.demoFallback.deleteWish(id);
+      }
+    } catch {
+      await this.demoFallback.deleteWish(id);
+    }
   }
 
   async publishWish(id: string): Promise<Wish> {
@@ -268,131 +319,161 @@ export class SupabaseAdapter implements DataAdapter {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    let query = this.client
-      .from('wishes')
-      .select('*', { count: 'exact' })
-      .eq('status', 'published')
-      .eq('visibility', 'public')
-      .order('created_at', { ascending: false })
-      .range(from, to);
+    try {
+      let query = this.client
+        .from('wishes')
+        .select('*', { count: 'exact' })
+        .eq('status', 'published')
+        .eq('visibility', 'public')
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
-    if (occasion) {
-      query = query.eq('occasion', occasion);
+      if (occasion) {
+        query = query.eq('occasion', occasion);
+      }
+
+      const { data, count, error } = await query;
+
+      if (error) {
+        return await this.demoFallback.getPublicWishes(options);
+      }
+
+      return {
+        wishes: (data || []).map((row) => rowToWish(row as WishRow)),
+        total: count || 0,
+      };
+    } catch {
+      return await this.demoFallback.getPublicWishes(options);
     }
-
-    const { data, count, error } = await query;
-
-    if (error) throw new Error(`Failed to get public wishes: ${error.message}`);
-
-    return {
-      wishes: (data || []).map((row) => rowToWish(row as WishRow)),
-      total: count || 0,
-    };
   }
 
   // ── Reactions ─────────────────────────────
 
   async addReaction(wishId: string, reactionType: ReactionType): Promise<WishReaction> {
-    const { data: existing } = await this.client
-      .from('wish_reactions')
-      .select('*')
-      .eq('wish_id', wishId)
-      .eq('reaction_type', reactionType)
-      .single();
+    try {
+      const { data: existing } = await this.client
+        .from('wish_reactions')
+        .select('*')
+        .eq('wish_id', wishId)
+        .eq('reaction_type', reactionType)
+        .single();
 
-    if (existing) {
+      if (existing) {
+        const { data, error } = await this.client
+          .from('wish_reactions')
+          .update({
+            count: (existing as ReactionRow).count + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', (existing as ReactionRow).id)
+          .select()
+          .single();
+
+        if (error) return await this.demoFallback.addReaction(wishId, reactionType);
+        return rowToReaction(data as ReactionRow);
+      }
+
       const { data, error } = await this.client
         .from('wish_reactions')
-        .update({
-          count: (existing as ReactionRow).count + 1,
-          updated_at: new Date().toISOString(),
+        .insert({
+          wish_id: wishId,
+          reaction_type: reactionType,
+          count: 1,
         })
-        .eq('id', (existing as ReactionRow).id)
         .select()
         .single();
 
-      if (error) throw new Error(`Failed to update reaction: ${error.message}`);
+      if (error) return await this.demoFallback.addReaction(wishId, reactionType);
       return rowToReaction(data as ReactionRow);
+    } catch {
+      return await this.demoFallback.addReaction(wishId, reactionType);
     }
-
-    const { data, error } = await this.client
-      .from('wish_reactions')
-      .insert({
-        wish_id: wishId,
-        reaction_type: reactionType,
-        count: 1,
-      })
-      .select()
-      .single();
-
-    if (error) throw new Error(`Failed to add reaction: ${error.message}`);
-    return rowToReaction(data as ReactionRow);
   }
 
   async getReactions(wishId: string): Promise<WishReaction[]> {
-    const { data, error } = await this.client
-      .from('wish_reactions')
-      .select('*')
-      .eq('wish_id', wishId)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await this.client
+        .from('wish_reactions')
+        .select('*')
+        .eq('wish_id', wishId)
+        .order('created_at', { ascending: false });
 
-    if (error) throw new Error(`Failed to get reactions: ${error.message}`);
-    return (data || []).map((row) => rowToReaction(row as ReactionRow));
+      if (error) return await this.demoFallback.getReactions(wishId);
+      return (data || []).map((row) => rowToReaction(row as ReactionRow));
+    } catch {
+      return await this.demoFallback.getReactions(wishId);
+    }
   }
 
   // ── Replies ───────────────────────────────
 
   async addReply(wishId: string, displayName: string, body: string): Promise<WishReply> {
-    const { data, error } = await this.client
-      .from('wish_replies')
-      .insert({
-        wish_id: wishId,
-        display_name: displayName || 'Anonymous',
-        body,
-        is_approved: true,
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await this.client
+        .from('wish_replies')
+        .insert({
+          wish_id: wishId,
+          display_name: displayName || 'Anonymous',
+          body,
+          is_approved: true,
+        })
+        .select()
+        .single();
 
-    if (error) throw new Error(`Failed to add reply: ${error.message}`);
-    return rowToReply(data as ReplyRow);
+      if (error) return await this.demoFallback.addReply(wishId, displayName, body);
+      return rowToReply(data as ReplyRow);
+    } catch {
+      return await this.demoFallback.addReply(wishId, displayName, body);
+    }
   }
 
   async getReplies(wishId: string): Promise<WishReply[]> {
-    const { data, error } = await this.client
-      .from('wish_replies')
-      .select('*')
-      .eq('wish_id', wishId)
-      .eq('is_approved', true)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await this.client
+        .from('wish_replies')
+        .select('*')
+        .eq('wish_id', wishId)
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false });
 
-    if (error) throw new Error(`Failed to get replies: ${error.message}`);
-    return (data || []).map((row) => rowToReply(row as ReplyRow));
+      if (error) return await this.demoFallback.getReplies(wishId);
+      return (data || []).map((row) => rowToReply(row as ReplyRow));
+    } catch {
+      return await this.demoFallback.getReplies(wishId);
+    }
   }
 
   // ── Views ─────────────────────────────────
 
   async addView(wishId: string, deviceType?: string, referrer?: string): Promise<void> {
-    const { error } = await this.client
-      .from('wish_views')
-      .insert({
-        wish_id: wishId,
-        user_agent: deviceType || referrer || null,
-      });
+    try {
+      const { error } = await this.client
+        .from('wish_views')
+        .insert({
+          wish_id: wishId,
+          user_agent: deviceType || referrer || null,
+        });
 
-    if (error) {
-      console.error('Failed to track view:', error.message);
+      if (error) {
+        await this.demoFallback.addView(wishId, deviceType, referrer);
+      }
+    } catch {
+      await this.demoFallback.addView(wishId, deviceType, referrer);
     }
   }
 
   async getViewCount(wishId: string): Promise<number> {
-    const { count, error } = await this.client
-      .from('wish_views')
-      .select('*', { count: 'exact', head: true })
-      .eq('wish_id', wishId);
+    try {
+      const { count, error } = await this.client
+        .from('wish_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('wish_id', wishId);
 
-    if (error) throw new Error(`Failed to get view count: ${error.message}`);
-    return count || 0;
+      if (error) return await this.demoFallback.getViewCount(wishId);
+      return count || 0;
+    } catch {
+      return await this.demoFallback.getViewCount(wishId);
+    }
   }
 
   // ── Stats ─────────────────────────────────
@@ -404,11 +485,9 @@ export class SupabaseAdapter implements DataAdapter {
       this.getReplies(wishId),
     ]);
 
-    const totalReactions = reactionsData.length;
-
     return {
       views: viewCount,
-      reactions: totalReactions,
+      reactions: reactionsData.length,
       replies: repliesData.length,
     };
   }

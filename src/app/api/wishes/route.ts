@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const occasion = searchParams.get('occasion');
 
-    const db = await getDataAdapter();
+    const db = getDataAdapter();
     const result = await db.getPublicWishes({ page, limit, occasion });
 
     return NextResponse.json(result);
@@ -48,20 +48,22 @@ export async function POST(request: NextRequest) {
     const validatedBody = parsed.data;
 
     let userId: string | undefined;
+    let authSupabaseClient;
+
     if (isSupabaseConfigured()) {
       try {
         const supabase = await getSupabaseServerClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           userId = user.id;
+          authSupabaseClient = supabase;
         }
       } catch (authErr) {
-        // Continue as guest if session check fails
         console.warn('Supabase auth session check failed, proceeding as guest:', authErr);
       }
     }
 
-    const db = await getDataAdapter();
+    const db = getDataAdapter(authSupabaseClient);
 
     // Sanitize user input
     const sanitizedRecipient = sanitizeHtml(validatedBody.recipientName);
