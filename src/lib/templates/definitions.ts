@@ -191,7 +191,7 @@ export const TEMPLATES: Template[] = [
     slug: 'love-letter',
     title: 'Love Letter',
     description: 'A classic virtual envelope that opens into a handwritten note.',
-    occasion: 'romance',
+    occasion: 'love',
     category: 'classic',
     colorPalette: {
       primary: '#8D6E63',
@@ -243,7 +243,7 @@ export const TEMPLATES: Template[] = [
     slug: 'proposal-reveal',
     title: 'Proposal Reveal',
     description: 'A suspenseful, slow reveal perfect for a big question.',
-    occasion: 'romance',
+    occasion: 'love',
     category: 'reveal',
     colorPalette: {
       primary: '#FFD700',
@@ -271,7 +271,7 @@ export const TEMPLATES: Template[] = [
     slug: 'congratulations-confetti',
     title: 'Congratulations Confetti',
     description: 'A burst of confetti and cheerful colors to celebrate an achievement.',
-    occasion: 'celebration',
+    occasion: 'congratulations',
     category: 'fun',
     colorPalette: {
       primary: '#4CAF50',
@@ -323,7 +323,7 @@ export const TEMPLATES: Template[] = [
     slug: 'new-home',
     title: 'New Home',
     description: 'A cozy template to congratulate someone on moving in.',
-    occasion: 'celebration',
+    occasion: 'congratulations',
     category: 'casual',
     colorPalette: {
       primary: '#795548',
@@ -349,7 +349,7 @@ export const TEMPLATES: Template[] = [
     slug: 'graduation-celebration',
     title: 'Graduation Celebration',
     description: 'A smart and inspiring theme for a new graduate.',
-    occasion: 'celebration',
+    occasion: 'congratulations',
     category: 'formal',
     colorPalette: {
       primary: '#1976D2',
@@ -375,7 +375,7 @@ export const TEMPLATES: Template[] = [
     slug: 'new-baby',
     title: 'New Baby',
     description: 'A sweet and gentle template to welcome a little one.',
-    occasion: 'celebration',
+    occasion: 'congratulations',
     category: 'emotional',
     colorPalette: {
       primary: '#F06292',
@@ -403,7 +403,7 @@ export const TEMPLATES: Template[] = [
     slug: 'thank-you-mom',
     title: 'Thank You Mom',
     description: 'A beautiful floral tribute to motherly love.',
-    occasion: 'family',
+    occasion: 'thank-you',
     category: 'emotional',
     colorPalette: {
       primary: '#AB47BC',
@@ -420,7 +420,7 @@ export const TEMPLATES: Template[] = [
     isPremium: false,
     isPublished: true,
     popularity: 90,
-    tags: ['mother', 'mom', 'love', 'family'],
+    tags: ['mother', 'mom', 'love', 'family', 'mothers-day', 'thank-you'],
     emoji: '👩‍👧',
     previewGradient: 'linear-gradient(135deg, #AB47BC, #CE93D8)'
   },
@@ -429,7 +429,7 @@ export const TEMPLATES: Template[] = [
     slug: 'thank-you-dad',
     title: 'Thank You Dad',
     description: 'A strong, classic template for fathers.',
-    occasion: 'family',
+    occasion: 'thank-you',
     category: 'emotional',
     colorPalette: {
       primary: '#37474F',
@@ -446,7 +446,7 @@ export const TEMPLATES: Template[] = [
     isPremium: false,
     isPublished: true,
     popularity: 88,
-    tags: ['father', 'dad', 'hero', 'family'],
+    tags: ['father', 'dad', 'hero', 'family', 'fathers-day', 'thank-you'],
     emoji: '👨‍👦',
     previewGradient: 'linear-gradient(135deg, #37474F, #78909C)'
   },
@@ -613,7 +613,7 @@ export const TEMPLATES: Template[] = [
     slug: 'new-year-countdown',
     title: 'New Year Countdown',
     description: 'Sparklers and a fresh look for the New Year.',
-    occasion: 'festival',
+    occasion: 'new-year',
     category: 'festive',
     colorPalette: {
       primary: '#1A237E',
@@ -630,7 +630,7 @@ export const TEMPLATES: Template[] = [
     isPremium: false,
     isPublished: true,
     popularity: 98,
-    tags: ['new-year', 'celebration', 'fireworks'],
+    tags: ['new-year', 'celebration', 'fireworks', 'festival'],
     emoji: '🎆',
     previewGradient: 'linear-gradient(135deg, #1A237E, #3949AB)'
   },
@@ -791,5 +791,135 @@ export const TEMPLATES: Template[] = [
     tags: ['scratch', 'reveal', 'interactive'],
     emoji: '🪙',
     previewGradient: 'linear-gradient(135deg, #9E9E9E, #E0E0E0)'
+  },
+  {
+    id: 'tpl_friend_1',
+    slug: 'friendship-forever',
+    title: 'Friendship Forever',
+    description: 'Celebrate the unbreakable bond of friendship with cheerful animations.',
+    occasion: 'friendship',
+    category: 'fun',
+    colorPalette: {
+      primary: '#FF7043',
+      secondary: '#42A5F5',
+      accent: '#FFCA28',
+      background: '#FFF3E0',
+      text: '#37474F'
+    },
+    fontStyle: 'playful',
+    animationType: 'confetti',
+    interactiveModules: ['balloons', 'button'] as InteractionType[],
+    supportedFields: ['title', 'message', 'signature'],
+    defaultMessage: 'To my favorite person! Thank you for always having my back, making me laugh until my stomach hurts, and being the best friend anyone could ask for.',
+    isPremium: false,
+    isPublished: true,
+    popularity: 91,
+    tags: ['friendship', 'besties', 'bff', 'fun'],
+    emoji: '🤝',
+    previewGradient: 'linear-gradient(135deg, #FF7043, #42A5F5)'
+  },
+  {
+    id: 'tpl_getwell_1',
+    slug: 'get-well-sunshine',
+    title: 'Get Well Sunshine',
+    description: 'A warm, soothing template to send healing vibes and sunny thoughts.',
+    occasion: 'get-well-soon',
+    category: 'emotional',
+    colorPalette: {
+      primary: '#43A047',
+      secondary: '#FDD835',
+      accent: '#81C784',
+      background: '#F1F8E9',
+      text: '#1B5E20'
+    },
+    fontStyle: 'friendly',
+    animationType: 'fade',
+    interactiveModules: ['blooming-roses', 'envelope'] as InteractionType[],
+    supportedFields: ['title', 'message', 'signature'],
+    defaultMessage: 'Sending you warm hugs, sunny smiles, and healing energy. Take all the rest you need — we can not wait to see you back on your feet!',
+    isPremium: false,
+    isPublished: true,
+    popularity: 88,
+    tags: ['get-well', 'health', 'healing', 'care'],
+    emoji: '🌻',
+    previewGradient: 'linear-gradient(135deg, #43A047, #FDD835)'
+  },
+  {
+    id: 'tpl_mother_1',
+    slug: 'mothers-day-bloom',
+    title: "Mother's Day Bloom",
+    description: 'A tender floral bouquet celebration honoring mothers everywhere.',
+    occasion: 'mothers-day',
+    category: 'emotional',
+    colorPalette: {
+      primary: '#E91E63',
+      secondary: '#F48FB1',
+      accent: '#FFF176',
+      background: '#FCE4EC',
+      text: '#880E4F'
+    },
+    fontStyle: 'elegant',
+    animationType: 'fade',
+    interactiveModules: ['blooming-roses', 'envelope'] as InteractionType[],
+    supportedFields: ['title', 'message', 'signature'],
+    defaultMessage: 'Happy Mother\'s Day! Thank you for the unconditional love, gentle guidance, and warmth you bring to our family every single day.',
+    isPremium: false,
+    isPublished: true,
+    popularity: 95,
+    tags: ['mothers-day', 'mom', 'mother', 'love', 'flowers'],
+    emoji: '👩',
+    previewGradient: 'linear-gradient(135deg, #E91E63, #F48FB1)'
+  },
+  {
+    id: 'tpl_father_1',
+    slug: 'fathers-day-hero',
+    title: "Father's Day Hero",
+    description: 'A stylish, heartfelt celebration dedicated to the best dad ever.',
+    occasion: 'fathers-day',
+    category: 'classic',
+    colorPalette: {
+      primary: '#1565C0',
+      secondary: '#42A5F5',
+      accent: '#FFB300',
+      background: '#E3F2FD',
+      text: '#0D47A1'
+    },
+    fontStyle: 'bold',
+    animationType: 'slide',
+    interactiveModules: ['button'] as InteractionType[],
+    supportedFields: ['title', 'message', 'signature'],
+    defaultMessage: 'Happy Father\'s Day! You are my role model, my supporter, and my hero. Thank you for everything you have taught me.',
+    isPremium: false,
+    isPublished: true,
+    popularity: 93,
+    tags: ['fathers-day', 'dad', 'father', 'hero'],
+    emoji: '👨',
+    previewGradient: 'linear-gradient(135deg, #1565C0, #42A5F5)'
+  },
+  {
+    id: 'tpl_thanks_1',
+    slug: 'gratitude-heart',
+    title: 'Gratitude From The Heart',
+    description: 'A simple, elegant way to say a meaningful thank you.',
+    occasion: 'thank-you',
+    category: 'classic',
+    colorPalette: {
+      primary: '#6A1B9A',
+      secondary: '#AB47BC',
+      accent: '#FFD54F',
+      background: '#F3E5F5',
+      text: '#4A148C'
+    },
+    fontStyle: 'elegant',
+    animationType: 'fade',
+    interactiveModules: ['envelope'] as InteractionType[],
+    supportedFields: ['title', 'message', 'signature'],
+    defaultMessage: 'Thank you from the bottom of my heart. Your kindness and generosity mean more to me than words can express.',
+    isPremium: false,
+    isPublished: true,
+    popularity: 89,
+    tags: ['thank-you', 'gratitude', 'appreciation', 'kindness'],
+    emoji: '🙏',
+    previewGradient: 'linear-gradient(135deg, #6A1B9A, #AB47BC)'
   }
 ];

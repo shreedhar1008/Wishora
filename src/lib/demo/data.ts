@@ -246,7 +246,7 @@ export class DemoDataAdapter implements DataAdapter {
   }
 
   async getWishesByOwner(ownerId: string): Promise<Wish[]> {
-    return wishes.filter(w => w.ownerId === ownerId).sort((a, b) => 
+    return wishes.filter(w => w.ownerId === ownerId || (ownerId === 'admin_shreedhar' && w.ownerId === 'demo_user')).sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }

@@ -56,9 +56,23 @@ export default async function OccasionPage({ params }: { params: Promise<{ slug:
     notFound();
   }
 
-  const recommendedTemplates = Object.values(TEMPLATES).filter(
-    (t) => t.category === occasion.slug || t.tags.includes(occasion.slug) || t.occasion === occasion.slug
-  ).slice(0, 6);
+  const target = occasion.slug.toLowerCase();
+  const recommendedTemplates = Object.values(TEMPLATES).filter((t) => {
+    const occ = t.occasion.toLowerCase();
+    if (occ === target) return true;
+    if (t.tags && t.tags.some((tag) => tag.toLowerCase() === target)) return true;
+    if (t.category && t.category.toLowerCase() === target) return true;
+    if (target === 'love' && (occ === 'romance' || occ === 'love')) return true;
+    if (target === 'romance' && (occ === 'romance' || occ === 'love')) return true;
+    if (target === 'congratulations' && (occ === 'celebration' || t.tags.includes('congratulations'))) return true;
+    if (target === 'celebration' && (occ === 'congratulations' || t.tags.includes('celebration'))) return true;
+    if (target === 'mothers-day' && (t.slug.includes('mom') || t.tags.includes('mothers-day'))) return true;
+    if (target === 'fathers-day' && (t.slug.includes('dad') || t.tags.includes('fathers-day'))) return true;
+    if (target === 'new-year' && (occ === 'new-year' || t.slug.includes('new-year'))) return true;
+    if (target === 'thank-you' && (occ === 'thank-you' || t.slug.startsWith('thank-you'))) return true;
+    if (target === 'friendship' && (occ === 'friendship' || t.category === 'fun')) return true;
+    return false;
+  }).slice(0, 6);
 
   const faqs = getFaqs(occasion.slug, occasion.title);
 

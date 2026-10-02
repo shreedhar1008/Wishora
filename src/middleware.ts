@@ -10,72 +10,91 @@ const AUTH_ROUTES = ['/login', '/signup'];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware if Supabase is not configured (demo mode)
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    return NextResponse.next();
-  }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
   // Create a response to pass through
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
 
-  // Create Supabase client with cookie handling for session refresh
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
-      },
+  let user: any = null;
+
+  // 1. Check local session cookie (fast, works offline/demo mode)
+  const localUserCookie = request.cookies.get('wishora_user')?.value;
+  if (localUserCookie) {
+    try {
+      user = JSON.parse(decodeURIComponent(localUserCookie));
+    } catch {
+      // invalid cookie
     }
-  );
+  }
 
-  // Refresh the session (important for keeping tokens valid)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // 2. If no local cookie and Supabase credentials exist, try Supabase session
+  if (!user && supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('placeholder')) {
+    try {
+      const supabase = createServerClient(
+        supabaseUrl,
+        supabaseAnonKey,
+        {
+          cookies: {
+            getAll() {
+              return request.cookies.getAll();
+            },
+            setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
+              cookiesToSet.forEach(({ name, value }) =>
+                request.cookies.set(name, value)
+              );
+              response = NextResponse.next({
+                request: { headers: request.headers },
+              });
+              cookiesToSet.forEach(({ name, value, options }) =>
+                response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
+              );
+            },
+          },
+        }
+      );
 
-  // Check if the current path is protected
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    } catch {
+      // Supabase connection error / offline
+    }
+  }
+
+  // Check if current path is protected
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
 
-  // Check if the current path is an auth route
+  // Check if current path is an auth route (login/signup)
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
 
   // Redirect unauthenticated users away from protected routes
   if (isProtectedRoute && !user) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    const fullPath = request.nextUrl.search ? `${pathname}${request.nextUrl.search}` : pathname;
+    loginUrl.searchParams.set('redirect', fullPath);
     return NextResponse.redirect(loginUrl);
   }
 
   // Redirect authenticated users away from auth routes to dashboard
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const redirectParam = request.nextUrl.searchParams.get('redirect');
+    const targetUrl = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/dashboard';
+    return NextResponse.redirect(new URL(targetUrl, request.url));
   }
 
-  // Admin route protection — check against ADMIN_EMAIL env var
+  // Admin route protection — check against ADMIN_EMAIL or default admin
   if (pathname.startsWith('/admin') && user) {
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (adminEmail && user.email !== adminEmail) {
+    const adminEmail = process.env.ADMIN_EMAIL || 'shreedharshiragurr@gmail.com';
+    const isAuthorizedAdmin =
+      user.email === adminEmail ||
+      user.email === 'shreedharshiragurr@gmail.com' ||
+      user.id === 'admin_shreedhar';
+
+    if (!isAuthorizedAdmin) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }

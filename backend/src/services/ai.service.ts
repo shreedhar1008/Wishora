@@ -1,6 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-interface GenerateWishRequest {
+export interface GenerateWishParams {
   recipientName: string;
   senderName?: string;
   occasion?: string;
@@ -102,65 +100,34 @@ const TEMPLATE_MESSAGES: Record<string, Record<string, string[]>> = {
       "Wishing you and your loved ones a sparkling, joyous festive season, {recipient}! 🎊 May peace, prosperity, and radiant happiness fill your home.",
     ],
   },
-  'mothers-day': {
-    heartfelt: [
-      "Happy Mother's Day, {recipient}! 👩 Thank you for your endless love, gentle patience, and beautiful warmth. You mean the world to our family.",
-      "To the most wonderful mother, {recipient}: May your day be as sweet, radiant, and special as you are to all of us. 💕🌸",
-    ],
-  },
-  'fathers-day': {
-    heartfelt: [
-      "Happy Father's Day, {recipient}! 👨 Thank you for being our rock, our guide, and our hero every single day. Wishing you the best day!",
-      "To an incredible dad, {recipient}: Thank you for all your sacrifices, wisdom, and laughter. Proud to have you in my life! 🌟",
-    ],
-  },
-  'new-year': {
-    heartfelt: [
-      "Happy New Year, {recipient}! 🎆 May the coming 365 days bring you boundless joy, vibrant health, and unstoppable success. Cheers to a fresh start! 🥂",
-    ],
-  },
-  'get-well-soon': {
-    heartfelt: [
-      "Sending you warmest thoughts and gentle healing vibes, {recipient}! 🌻 Take all the time you need to rest and recover. Can't wait to see your smile again! 💚",
-    ],
-  },
 };
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = (await request.json()) as GenerateWishRequest;
-    const recipient = body.recipientName?.trim() || 'Friend';
-    const occasion = body.occasion?.toLowerCase() || 'birthday';
-    const tone = body.tone || 'heartfelt';
-    const relationship = body.relationship || 'special person';
-    const customDetails = body.customDetails?.trim() || '';
+export class AiService {
+  static generateWish(params: GenerateWishParams) {
+    const recipient = params.recipientName?.trim() || 'Friend';
+    const occasion = params.occasion?.toLowerCase() || 'birthday';
+    const tone = params.tone || 'heartfelt';
+    const relationship = params.relationship || 'special person';
+    const customDetails = params.customDetails?.trim() || '';
 
-    // Check occasion dictionary or fallback to birthday/general
     const occasionGroup = TEMPLATE_MESSAGES[occasion] || TEMPLATE_MESSAGES.birthday;
     const toneMessages = occasionGroup[tone] || occasionGroup.heartfelt || Object.values(occasionGroup)[0];
 
-    const generatedOptions = toneMessages.map((msg) => {
+    const suggestions = toneMessages.map((msg) => {
       let formatted = msg
         .replace(/{recipient}/g, recipient)
         .replace(/{relationship}/g, relationship);
-      
+
       if (customDetails) {
         formatted += ` Remember: ${customDetails}!`;
       }
       return formatted;
     });
 
-    return NextResponse.json({
+    return {
       success: true,
-      suggestions: generatedOptions,
-      primaryMessage: generatedOptions[0],
-    });
-  } catch (error: unknown) {
-    console.error('Error generating wish message:', error);
-    const message = error instanceof Error ? error.message : 'Failed to generate wish message';
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+      suggestions,
+      primaryMessage: suggestions[0],
+    };
   }
 }

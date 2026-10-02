@@ -4,7 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { isDemoMode } from '@/lib/db';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -42,13 +41,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             );
           })}
         </nav>
-        <div className="p-6 border-t border-border-light">
-          {isDemoMode() && (
-            <div className="bg-amber/10 border border-amber/20 rounded-xl p-4 text-center">
-              <p className="text-xs text-amber-800 font-medium">Demo Mode</p>
-            </div>
-          )}
-        </div>
       </aside>
 
       {/* Main Content */}

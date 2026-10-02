@@ -177,5 +177,89 @@ export const OCCASIONS: OccasionInfo[] = [
     ],
     seoTitle: 'Interactive Digital Thank You Cards',
     seoDescription: 'Show your gratitude with beautiful, custom digital thank you messages.'
+  },
+  {
+    slug: 'love',
+    title: 'Love',
+    description: 'Heartfelt declarations of love, romantic letters, and sweet surprises.',
+    emoji: '💕',
+    color: '#E91E63',
+    exampleMessages: [
+      'Every moment with you feels like magic. I love you more each day.',
+      'You are my favorite person, my heart, and my home.',
+      'Just a little reminder that you are deeply loved today and always.'
+    ],
+    seoTitle: 'Create Romantic Love Wishes & Digital Love Letters',
+    seoDescription: 'Send personalized, interactive love letters and romantic surprises online.'
+  },
+  {
+    slug: 'congratulations',
+    title: 'Congratulations',
+    description: 'Celebrate achievements, promotions, graduations, and success milestones.',
+    emoji: '🎉',
+    color: '#4CAF50',
+    exampleMessages: [
+      'Huge congratulations on your big achievement! You earned every bit of this.',
+      'So proud of you and all your hard work! The future is yours.',
+      'Cheers to your fantastic success and what lies ahead!'
+    ],
+    seoTitle: 'Interactive Congratulations Wishes & Digital Cards',
+    seoDescription: 'Celebrate milestones with vibrant animated congratulations greetings.'
+  },
+  {
+    slug: 'friendship',
+    title: 'Friendship',
+    description: 'Celebrate the besties, pals, and ride-or-die friends who light up life.',
+    emoji: '🤝',
+    color: '#FF7043',
+    exampleMessages: [
+      'To my favorite human — thank you for being the truest friend.',
+      'Grateful for all the laughs, adventures, and late night talks.',
+      'Cheers to a friendship that only gets stronger with time!'
+    ],
+    seoTitle: 'Heartfelt Friendship Wishes & Digital Cards',
+    seoDescription: 'Send interactive greetings celebrating true friendship.'
+  },
+  {
+    slug: 'mothers-day',
+    title: "Mother's Day",
+    description: 'Special tributes honoring mom and maternal figures.',
+    emoji: '👩',
+    color: '#AB47BC',
+    exampleMessages: [
+      'Happy Mother\'s Day to the most loving, selfless woman in the world.',
+      'Thank you for your warmth, guidance, and endless love.',
+      'To the world you are a mother, but to our family you are the world.'
+    ],
+    seoTitle: "Interactive Mother's Day Wishes & Cards",
+    seoDescription: "Celebrate mom with a personalized, animated Mother's Day surprise."
+  },
+  {
+    slug: 'fathers-day',
+    title: "Father's Day",
+    description: 'Warm appreciation and celebrations for dad and father figures.',
+    emoji: '👨',
+    color: '#1565C0',
+    exampleMessages: [
+      'Happy Father\'s Day to my hero, mentor, and biggest supporter.',
+      'Thank you for always having my back and teaching me what matters most.',
+      'Wishing the best dad the greatest day ever!'
+    ],
+    seoTitle: "Interactive Father's Day Wishes & Cards",
+    seoDescription: "Send dad a personalized, interactive Father's Day greeting."
+  },
+  {
+    slug: 'get-well-soon',
+    title: 'Get Well Soon',
+    description: 'Send healing vibes, warm hugs, and comforting thoughts.',
+    emoji: '🌻',
+    color: '#43A047',
+    exampleMessages: [
+      'Sending you healing sunshine and big hugs. Rest up and feel better soon!',
+      'Thinking of you and wishing you a speedy and smooth recovery.',
+      'Can not wait to see your bright smile again soon. Take good care!'
+    ],
+    seoTitle: 'Get Well Soon Wishes & Comfort Greetings Online',
+    seoDescription: 'Brighten someone\'s recovery with warm, uplifting digital wishes.'
   }
 ];

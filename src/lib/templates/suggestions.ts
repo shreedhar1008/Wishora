@@ -63,5 +63,36 @@ export const SUGGESTIONS: MessageSuggestion[] = [
   { id: 's29', occasion: 'wedding', tone: 'formal', text: 'Wishing you joy, love and happiness on your wedding day and as you begin your new life together.' },
 
   // Romance - Funny
-  { id: 's30', occasion: 'romance', tone: 'funny', text: 'I love you even when I am hungry. That is true romance.' }
+  { id: 's30', occasion: 'romance', tone: 'funny', text: 'I love you even when I am hungry. That is true romance.' },
+
+  // Love
+  { id: 's31', occasion: 'love', tone: 'warm', text: 'Every moment with you is a gift I cherish deeply. I love you more and more every day.' },
+  { id: 's32', occasion: 'love', tone: 'emotional', text: 'You are my safe place, my happiest thought, and my forever home.' },
+  { id: 's33', occasion: 'love', tone: 'funny', text: 'You are stuck with me now, and honestly, you could not have chosen better.' },
+
+  // Congratulations
+  { id: 's34', occasion: 'congratulations', tone: 'warm', text: 'Huge congratulations on your big achievement! You earned every bit of this.' },
+  { id: 's35', occasion: 'congratulations', tone: 'emotional', text: 'Seeing how hard you worked for this makes me so proud. The future is yours!' },
+  { id: 's36', occasion: 'congratulations', tone: 'funny', text: 'You did it! Now who do I send the bill to for being your #1 hype person?' },
+
+  // Friendship
+  { id: 's37', occasion: 'friendship', tone: 'warm', text: 'To my favorite human: thank you for being the truest, kindest friend.' },
+  { id: 's38', occasion: 'friendship', tone: 'emotional', text: 'Grateful for all the memories, late-night laughs, and always having someone in my corner.' },
+  { id: 's39', occasion: 'friendship', tone: 'funny', text: 'We will be friends forever because you already know too much.' },
+
+  // Mother's Day
+  { id: 's40', occasion: 'mothers-day', tone: 'warm', text: 'Happy Mother\'s Day! Thank you for the endless love and warmth you bring into my life.' },
+  { id: 's41', occasion: 'mothers-day', tone: 'emotional', text: 'To the world you are a mother, but to me you are the whole world.' },
+
+  // Father's Day
+  { id: 's42', occasion: 'fathers-day', tone: 'warm', text: 'Happy Father\'s Day to my hero and biggest supporter. Thank you for everything!' },
+  { id: 's43', occasion: 'fathers-day', tone: 'emotional', text: 'Dad, your guidance and strength have shaped who I am today. Love you always.' },
+
+  // Get Well Soon
+  { id: 's44', occasion: 'get-well-soon', tone: 'warm', text: 'Sending you healing sunshine and big hugs. Rest up and feel better soon!' },
+  { id: 's45', occasion: 'get-well-soon', tone: 'emotional', text: 'Thinking of you and sending so much love your way. Can not wait to see your smile again!' },
+
+  // New Year
+  { id: 's46', occasion: 'new-year', tone: 'warm', text: 'Happy New Year! Wishing you 365 days of good health, boundless joy, and massive success!' },
+  { id: 's47', occasion: 'new-year', tone: 'funny', text: 'May all your troubles last as long as your New Year\'s resolutions. Cheers to a new year!' }
 ];

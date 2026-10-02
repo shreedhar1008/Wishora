@@ -72,3 +72,6 @@ next-env.d.ts
 *.key
 *.cert
 *.log
+*.zip
+wishora_zip.zip
+frontend/

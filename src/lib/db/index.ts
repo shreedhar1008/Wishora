@@ -33,7 +33,7 @@ export function getDataAdapter(client?: SupabaseClient): DataAdapter {
 }
 
 /**
- * Returns true if the app is running in demo mode (no Supabase configured).
+ * Returns true if the app is running in demo mode.
  */
 export function isDemoMode(): boolean {
   return !isSupabaseConfigured();

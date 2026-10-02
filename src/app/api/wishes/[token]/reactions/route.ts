@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
-    const db = await getDataAdapter();
+    const db = getDataAdapter();
     const wish = await db.getWishByToken(token);
     
     if (!wish) {
@@ -30,7 +30,7 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
-    const db = await getDataAdapter();
+    const db = getDataAdapter();
     const wish = await db.getWishByToken(token);
     
     if (!wish) {

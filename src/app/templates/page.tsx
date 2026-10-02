@@ -17,6 +17,10 @@ const OCCASION_FILTERS: { value: string; label: string; emoji: string }[] = [
   { value: 'thank-you', label: 'Thank You', emoji: '🙏' },
   { value: 'friendship', label: 'Friendship', emoji: '🤝' },
   { value: 'festival', label: 'Festival', emoji: '🎊' },
+  { value: 'mothers-day', label: "Mother's Day", emoji: '👩' },
+  { value: 'fathers-day', label: "Father's Day", emoji: '👨' },
+  { value: 'new-year', label: 'New Year', emoji: '🎆' },
+  { value: 'get-well-soon', label: 'Get Well', emoji: '🌻' },
 ];
 
 const SORT_OPTIONS = [
@@ -35,7 +39,24 @@ function TemplatesPageContent() {
     let result = [...TEMPLATES].filter((t) => t.isPublished);
 
     if (activeOccasion !== 'all') {
-      result = result.filter((t) => t.occasion === activeOccasion);
+      const target = activeOccasion.toLowerCase();
+      result = result.filter((t) => {
+        const occ = t.occasion.toLowerCase();
+        if (occ === target) return true;
+        if (t.tags && t.tags.some((tag) => tag.toLowerCase() === target)) return true;
+        if (t.category && t.category.toLowerCase() === target) return true;
+
+        if (target === 'congratulations' && (occ === 'celebration' || t.tags.includes('congratulations'))) return true;
+        if (target === 'celebration' && (occ === 'congratulations' || t.tags.includes('celebration'))) return true;
+        if (target === 'love' && (occ === 'romance' || occ === 'love')) return true;
+        if (target === 'mothers-day' && (t.slug.includes('mom') || t.tags.includes('mothers-day') || t.tags.includes('mom'))) return true;
+        if (target === 'fathers-day' && (t.slug.includes('dad') || t.tags.includes('fathers-day') || t.tags.includes('dad'))) return true;
+        if (target === 'new-year' && (occ === 'new-year' || t.slug.includes('new-year'))) return true;
+        if (target === 'thank-you' && (occ === 'thank-you' || t.slug.startsWith('thank-you'))) return true;
+        if (target === 'friendship' && (occ === 'friendship' || t.category === 'fun')) return true;
+
+        return false;
+      });
     }
 
     if (search.trim()) {

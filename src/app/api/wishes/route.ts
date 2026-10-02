@@ -47,13 +47,14 @@ export async function POST(request: NextRequest) {
 
     const validatedBody = parsed.data;
 
-    let userId: string | undefined;
+    let userId: string | undefined = undefined;
     let authSupabaseClient;
 
     if (isSupabaseConfigured()) {
       try {
         const supabase = await getSupabaseServerClient();
         const { data: { user } } = await supabase.auth.getUser();
+
         if (user) {
           userId = user.id;
           authSupabaseClient = supabase;
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (authErr) {
-        console.warn('Supabase auth session check failed, proceeding as guest:', authErr);
+        console.warn('Auth check skipped, proceeding with guest wish:', authErr);
       }
     }
 

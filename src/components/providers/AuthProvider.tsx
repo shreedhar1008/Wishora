@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
-import { isSupabaseConfigured, getSupabaseBrowserClient } from '@/lib/supabase';
+import { getSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase';
+import { getLocalSession, clearLocalSession, saveLocalSession } from '@/lib/auth';
 
 // ─────────────────────────────────────────────
 // Auth Context Types
@@ -21,9 +22,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
-  isLoading: false,
+  isLoading: true,
   isAuthenticated: false,
-  isDemoMode: true,
+  isDemoMode: false,
   signOut: async () => {},
   refreshSession: async () => {},
 });
@@ -33,74 +34,144 @@ const AuthContext = createContext<AuthContextType>({
 // ─────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const demoMode = useMemo(() => !isSupabaseConfigured(), []);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(!demoMode);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const handleSignOut = useCallback(async () => {
-    if (demoMode) return;
     try {
-      const supabase = getSupabaseBrowserClient();
-      await supabase.auth.signOut();
+      clearLocalSession();
       setUser(null);
       setSession(null);
+
+      if (isSupabaseConfigured()) {
+        const supabase = getSupabaseBrowserClient();
+        await supabase.auth.signOut();
+      }
     } catch (err) {
-      console.error('Sign out error:', err);
+      console.warn('Sign out notice:', err);
     }
-  }, [demoMode]);
+  }, []);
 
   const refreshSession = useCallback(async () => {
-    if (demoMode) {
-      return;
-    }
     try {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+      const local = getLocalSession();
+      if (local) {
+        setUser(local);
+        setSession({
+          access_token: 'wishora_demo_token',
+          refresh_token: 'wishora_demo_refresh',
+          expires_in: 3600 * 24 * 30,
+          token_type: 'bearer',
+          user: local,
+        } as Session);
+      }
+
+      if (isSupabaseConfigured()) {
+        const supabase = getSupabaseBrowserClient();
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession?.user) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          saveLocalSession(currentSession.user);
+        }
+      }
     } catch (err) {
-      console.error('Refresh session error:', err);
+      console.warn('Refresh session notice:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [demoMode]);
+  }, []);
 
   useEffect(() => {
-    if (demoMode) {
-      return;
+    let isMounted = true;
+
+    // 1. Initial local session check (synchronous & instant)
+    const initialLocal = getLocalSession();
+    if (initialLocal && isMounted) {
+      setUser(initialLocal);
+      setSession({
+        access_token: 'wishora_demo_token',
+        refresh_token: 'wishora_demo_refresh',
+        expires_in: 3600 * 24 * 30,
+        token_type: 'bearer',
+        user: initialLocal,
+      } as Session);
+      setIsLoading(false);
     }
 
-    let isMounted = true;
-    const supabase = getSupabaseBrowserClient();
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (isMounted) {
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-        setIsLoading(false);
+    // 2. Listen to custom auth events
+    const handleLocalAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent<User | null>;
+      if (!isMounted) return;
+      const newUser = customEvent.detail ?? getLocalSession();
+      if (newUser) {
+        setUser(newUser);
+        setSession({
+          access_token: 'wishora_demo_token',
+          refresh_token: 'wishora_demo_refresh',
+          expires_in: 3600 * 24 * 30,
+          token_type: 'bearer',
+          user: newUser,
+        } as Session);
+      } else {
+        setUser(null);
+        setSession(null);
       }
-    }).catch(() => {
+      setIsLoading(false);
+    };
+
+    window.addEventListener('wishora:auth-change', handleLocalAuthChange);
+
+    // 3. Supabase auth check (if configured)
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabaseBrowserClient();
+
+        supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+          if (isMounted) {
+            if (initialSession?.user) {
+              setSession(initialSession);
+              setUser(initialSession.user);
+              saveLocalSession(initialSession.user);
+            }
+            setIsLoading(false);
+          }
+        }).catch(() => {
+          if (isMounted) setIsLoading(false);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (_event, newSession) => {
+            if (isMounted) {
+              if (newSession?.user) {
+                setSession(newSession);
+                setUser(newSession.user);
+                saveLocalSession(newSession.user);
+              }
+              setIsLoading(false);
+            }
+          }
+        );
+
+        return () => {
+          isMounted = false;
+          window.removeEventListener('wishora:auth-change', handleLocalAuthChange);
+          subscription.unsubscribe();
+        };
+      } catch (err) {
+        console.warn('Supabase client notice:', err);
+        if (isMounted) setIsLoading(false);
+      }
+    } else {
       if (isMounted) setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        if (isMounted) {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          setIsLoading(false);
-        }
-      }
-    );
+    }
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      window.removeEventListener('wishora:auth-change', handleLocalAuthChange);
     };
-  }, [demoMode]);
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -109,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         isLoading,
         isAuthenticated: !!user,
-        isDemoMode: demoMode,
+        isDemoMode: !isSupabaseConfigured(),
         signOut: handleSignOut,
         refreshSession,
       }}

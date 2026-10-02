@@ -7,7 +7,7 @@ import { TEMPLATES } from '@/lib/templates/definitions';
 interface AdminStats {
   templatesCount: number;
   publishedTemplates: number;
-  demoWishesCount: number;
+  totalWishesCount: number;
   reportsCount: number;
 }
 
@@ -56,9 +56,6 @@ export default function AdminClientView({
             <Button variant="primary" className="w-full" onClick={handleLogin}>
               Access Admin Panel
             </Button>
-            <p className="text-xs text-charcoal-muted text-center">
-              Demo mode: use &quot;admin&quot; as the key
-            </p>
           </div>
         </Card>
       </div>
@@ -92,7 +89,7 @@ export default function AdminClientView({
           {[
             { label: 'Templates', value: stats.templatesCount, emoji: '🎨' },
             { label: 'Published', value: stats.publishedTemplates, emoji: '✅' },
-            { label: 'Demo Wishes', value: stats.demoWishesCount, emoji: '💌' },
+            { label: 'Total Wishes', value: stats.totalWishesCount, emoji: '💌' },
             { label: 'Reports', value: stats.reportsCount, emoji: '🚩' },
           ].map((stat) => (
             <Card key={stat.label} padding="md">
@@ -196,9 +193,9 @@ export default function AdminClientView({
               <h3 className="font-semibold text-charcoal mb-4">System Information</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-charcoal-muted">Mode</span>
-                  <Badge variant={isSupabaseConfigured ? "emerald" : "gold"}>
-                    {isSupabaseConfigured ? "Production Mode" : "Demo Mode"}
+                  <span className="text-charcoal-muted">Environment</span>
+                  <Badge variant="emerald">
+                    Active
                   </Badge>
                 </div>
                 <div className="flex justify-between">
@@ -207,7 +204,7 @@ export default function AdminClientView({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-charcoal-muted">Database</span>
-                  <span className="font-medium">{isSupabaseConfigured ? "Supabase" : "In-Memory (Demo)"}</span>
+                  <span className="font-medium">Supabase</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-charcoal-muted">Templates</span>

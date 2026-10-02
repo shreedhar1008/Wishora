@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button, Card, Badge } from '@/components/ui';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { TEMPLATES } from '@/lib/templates/definitions';
 
 const OCCASIONS = [
@@ -11,22 +12,48 @@ const OCCASIONS = [
   { slug: 'anniversary', emoji: '💑', label: 'Anniversary' },
   { slug: 'wedding', emoji: '💒', label: 'Wedding' },
   { slug: 'love', emoji: '💕', label: 'Love' },
-  { slug: 'friendship', emoji: '🤝', label: 'Friendship' },
-  { slug: 'congratulations', emoji: '🎉', label: 'Congratulations' },
+  { slug: 'congratulations', emoji: '🎉', label: 'Congrats' },
   { slug: 'thank-you', emoji: '🙏', label: 'Thank You' },
+  { slug: 'friendship', emoji: '🤝', label: 'Friendship' },
   { slug: 'festival', emoji: '🎊', label: 'Festival' },
-  { slug: 'other', emoji: '✨', label: 'Other' },
+  { slug: 'mothers-day', emoji: '👩', label: "Mother's Day" },
+  { slug: 'fathers-day', emoji: '👨', label: "Father's Day" },
+  { slug: 'new-year', emoji: '🎆', label: 'New Year' },
+  { slug: 'get-well-soon', emoji: '🌻', label: 'Get Well' },
 ];
 
 function CreatePageContent() {
   const searchParams = useSearchParams();
   const preSelectedOccasion = searchParams?.get('occasion') || '';
   const [selectedOccasion, setSelectedOccasion] = React.useState(preSelectedOccasion);
+  const { isAuthenticated, isLoading } = useAuth();
 
   const filteredTemplates = React.useMemo(() => {
     if (!selectedOccasion) return TEMPLATES.filter((t) => t.isPublished).slice(0, 12);
-    return TEMPLATES.filter((t) => t.isPublished && t.occasion === selectedOccasion);
+    const target = selectedOccasion.toLowerCase();
+
+    return TEMPLATES.filter((t) => {
+      if (!t.isPublished) return false;
+      const occ = t.occasion.toLowerCase();
+      if (occ === target) return true;
+      if (t.tags && t.tags.some((tag) => tag.toLowerCase() === target)) return true;
+      if (t.category && t.category.toLowerCase() === target) return true;
+
+      // Handle aliases
+      if (target === 'congratulations' && (occ === 'celebration' || t.tags.includes('congratulations'))) return true;
+      if (target === 'celebration' && (occ === 'congratulations' || t.tags.includes('celebration'))) return true;
+      if (target === 'love' && (occ === 'romance' || occ === 'love')) return true;
+      if (target === 'mothers-day' && (t.slug.includes('mom') || t.tags.includes('mothers-day') || t.tags.includes('mom'))) return true;
+      if (target === 'fathers-day' && (t.slug.includes('dad') || t.tags.includes('fathers-day') || t.tags.includes('dad'))) return true;
+      if (target === 'new-year' && (occ === 'new-year' || t.slug.includes('new-year'))) return true;
+      if (target === 'thank-you' && (occ === 'thank-you' || t.slug.startsWith('thank-you'))) return true;
+      if (target === 'friendship' && (occ === 'friendship' || t.category === 'fun')) return true;
+
+      return false;
+    });
   }, [selectedOccasion]);
+
+  const currentRedirect = selectedOccasion ? `/create?occasion=${selectedOccasion}` : '/create';
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -39,8 +66,32 @@ function CreatePageContent() {
           <p className="text-lg text-charcoal-light">
             Choose an occasion, pick a template, and make it magical
           </p>
-          <Badge variant="gold" className="mt-4">No signup required</Badge>
         </div>
+
+        {/* Friendly tip if not authenticated */}
+        {!isLoading && !isAuthenticated && (
+          <div className="mb-10 p-5 bg-plum-50/60 border border-plum-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-soft animate-fade-in max-w-3xl mx-auto">
+            <div className="flex items-center gap-3 text-left">
+              <span className="text-2xl">✨</span>
+              <div>
+                <p className="text-sm font-semibold text-plum">Create as guest or sign in</p>
+                <p className="text-xs text-charcoal-muted">You can customize and share any wish instantly! Sign in anytime to track views and manage replies.</p>
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Link href={`/login?redirect=${encodeURIComponent(currentRedirect)}`}>
+                <Button size="sm" variant="outline">
+                  Log in
+                </Button>
+              </Link>
+              <Link href={`/signup?redirect=${encodeURIComponent(currentRedirect)}`}>
+                <Button size="sm" variant="primary">
+                  Sign up
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Step 1: Choose Occasion */}
         <div className="mb-12">
@@ -49,7 +100,7 @@ function CreatePageContent() {
             What&apos;s the occasion?
           </h2>
 
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
             {OCCASIONS.map((occ) => (
               <button
                 key={occ.slug}
@@ -77,7 +128,10 @@ function CreatePageContent() {
           {filteredTemplates.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredTemplates.map((tpl) => (
-                <Link key={tpl.id} href={`/create/${tpl.slug}`}>
+                <Link
+                  key={tpl.id}
+                  href={`/create/${tpl.slug}`}
+                >
                   <Card hover padding="none" className="overflow-hidden group h-full">
                     <div
                       className="h-36 flex items-center justify-center relative"

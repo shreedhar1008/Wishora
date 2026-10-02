@@ -241,9 +241,9 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
         if (!res.ok) throw new Error('Not found');
         return res.json();
       })
-      .then((data) => {
+      .then((data: Record<string, unknown> & { publicToken?: string; templateId?: string; templateSlug?: string }) => {
         if (data && data.publicToken) {
-          setWish(data);
+          setWish(data as unknown as Partial<Wish>);
           const tpl = TEMPLATES.find((t) => t.id === data.templateId || t.slug === data.templateSlug) || null;
           setTemplate(tpl);
           setPhase('intro');
@@ -547,9 +547,13 @@ export default function WishClientPage({ token, serverWish }: { token: string, s
                   {wish?.occasion === 'love' && `Dear ${wish?.recipientName} 💝`}
                   {wish?.occasion === 'wedding' && `Congratulations, ${wish?.recipientName}! 💒`}
                   {wish?.occasion === 'thank-you' && `Thank You, ${wish?.recipientName}! 🙏`}
-                  {wish?.occasion === 'friendship' && `Dear ${wish?.recipientName} 🤝`}
+                  {wish?.occasion === 'friendship' && `To My Friend, ${wish?.recipientName}! 🤝`}
                   {wish?.occasion === 'festival' && `Happy Celebrations, ${wish?.recipientName}! 🎊`}
-                  {!wish?.occasion && `Dear ${wish?.recipientName} ✨`}
+                  {wish?.occasion === 'mothers-day' && `Happy Mother's Day, ${wish?.recipientName}! 👩`}
+                  {wish?.occasion === 'fathers-day' && `Happy Father's Day, ${wish?.recipientName}! 👨`}
+                  {wish?.occasion === 'new-year' && `Happy New Year, ${wish?.recipientName}! 🎆`}
+                  {wish?.occasion === 'get-well-soon' && `Get Well Soon, ${wish?.recipientName}! 🌻`}
+                  {(!wish?.occasion || !['birthday', 'anniversary', 'congratulations', 'love', 'wedding', 'thank-you', 'friendship', 'festival', 'mothers-day', 'fathers-day', 'new-year', 'get-well-soon'].includes(wish.occasion)) && `Dear ${wish?.recipientName || 'You'} ✨`}
                 </h1>
               </div>
 

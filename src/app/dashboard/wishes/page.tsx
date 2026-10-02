@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { getDataAdapter } from '@/lib/db';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getSupabaseServerClient } from '@/lib/supabase-server';
@@ -14,18 +15,35 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function MyWishesPage() {
-  let userId = 'demo_user';
+  let user: any = null;
 
   if (isSupabaseConfigured()) {
-    const supabase = await getSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      userId = user.id;
-    } else {
-      redirect('/login');
+    try {
+      const supabase = await getSupabaseServerClient();
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    } catch {
+      // Supabase offline
     }
   }
 
+  if (!user) {
+    const cookieStore = await cookies();
+    const localUserCookie = cookieStore.get('wishora_user')?.value;
+    if (localUserCookie) {
+      try {
+        user = JSON.parse(decodeURIComponent(localUserCookie));
+      } catch {
+        // invalid cookie
+      }
+    }
+  }
+
+  if (!user) {
+    redirect('/login?redirect=/dashboard/wishes');
+  }
+
+  const userId = user.id;
   const db = getDataAdapter();
   const rawWishes = await db.getWishesByOwner(userId);
 

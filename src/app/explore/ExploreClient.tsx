@@ -43,7 +43,7 @@ export default function ExploreClient() {
   useEffect(() => {
     fetch('/api/wishes?limit=20')
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: { wishes?: Array<{ id?: string; publicToken: string; occasion?: string; recipientName?: string; title?: string }> }) => {
         if (data && Array.isArray(data.wishes) && data.wishes.length > 0) {
           const fetchedItems: ExploreWishItem[] = data.wishes.map((w: { id?: string; publicToken: string; occasion?: string; recipientName?: string; title?: string }) => ({
             id: w.id || w.publicToken,

@@ -30,7 +30,7 @@ function HeroSection() {
             transition={{ duration: 0.6 }}
           >
             <Badge variant="gold" className="mb-6 text-sm px-4 py-1.5">
-              ✨ No signup required
+              ✨ Personalized Digital Wishes
             </Badge>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-charcoal leading-tight mb-6 text-balance">
               Make someone&apos;s day{' '}
@@ -505,7 +505,7 @@ function FinalCTA() {
             ✨ Create Your First Wish
           </Button>
         </Link>
-        <p className="text-sm text-white/50 mt-4">Free forever • No signup required • Share instantly</p>
+        <p className="text-sm text-white/50 mt-4">Free forever • Easy to create • Share instantly</p>
       </div>
     </section>
   );

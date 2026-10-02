@@ -154,79 +154,84 @@ export class SupabaseAdapter implements DataAdapter {
   // ── Wishes ────────────────────────────────
 
   async createWish(wish: Partial<Wish>): Promise<Wish> {
-    const token = wish.publicToken || generateToken(16);
-    const isPublished = wish.isPublished !== false;
-    const status = wish.status || (isPublished ? 'published' : 'draft');
-    const isPublic = wish.isPublic !== undefined ? wish.isPublic : (wish.visibility === 'public');
+    try {
+      const token = wish.publicToken || generateToken(16);
+      const isPublished = wish.isPublished !== false;
+      const status = wish.status || (isPublished ? 'published' : 'draft');
+      const isPublic = wish.isPublic !== undefined ? wish.isPublic : (wish.visibility === 'public');
 
-    const insertData = {
-      ...wishToInsertRow(wish),
-      public_token: token,
-      template_slug: wish.templateSlug || wish.templateId || 'birthday-balloon-blast',
-      occasion: wish.occasion || 'birthday',
-      recipient_name: wish.recipientName || 'Friend',
-      sender_name: wish.senderName || null,
-      title: wish.title || null,
-      message: wish.message || '',
-      status: status,
-      visibility: isPublic ? 'public' : 'private',
-      settings: wish.settings || {},
-      owner_id: wish.ownerId || null,
-      published_at: isPublished ? new Date().toISOString() : null,
-    };
+      const insertData = {
+        ...wishToInsertRow(wish),
+        public_token: token,
+        template_slug: wish.templateSlug || wish.templateId || 'birthday-balloon-blast',
+        occasion: wish.occasion || 'birthday',
+        recipient_name: wish.recipientName || 'Friend',
+        sender_name: wish.senderName || null,
+        title: wish.title || null,
+        message: wish.message || '',
+        status: status,
+        visibility: isPublic ? 'public' : 'private',
+        settings: wish.settings || {},
+        owner_id: wish.ownerId || null,
+        published_at: isPublished ? new Date().toISOString() : null,
+      };
 
-    let { data, error } = await this.client
-      .from('wishes')
-      .insert(insertData)
-      .select()
-      .single();
+      let { data, error } = await this.client
+        .from('wishes')
+        .insert(insertData)
+        .select()
+        .single();
 
-    // If foreign key constraint on owner_id fails (missing profile row)
-    if (error && error.message.includes('wishes_owner_id_fkey')) {
-      console.warn('Foreign key violation on owner_id, attempting auto-recovery...');
-      if (insertData.owner_id) {
-        try {
-          await this.client.from('profiles').upsert({
-            id: insertData.owner_id,
-            display_name: insertData.sender_name || 'User',
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'id' });
+      // If foreign key constraint on owner_id fails (missing profile row)
+      if (error && error.message.includes('wishes_owner_id_fkey')) {
+        console.warn('Foreign key violation on owner_id, attempting auto-recovery...');
+        if (insertData.owner_id) {
+          try {
+            await this.client.from('profiles').upsert({
+              id: insertData.owner_id,
+              display_name: insertData.sender_name || 'User',
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'id' });
 
-          const retryResult = await this.client
+            const retryResult = await this.client
+              .from('wishes')
+              .insert(insertData)
+              .select()
+              .single();
+
+            if (!retryResult.error) {
+              data = retryResult.data;
+              error = null;
+            }
+          } catch {
+            // ignore error and proceed to fallback
+          }
+        }
+
+        // If still error, insert with owner_id = null so wish is NEVER lost
+        if (error) {
+          const fallbackNullResult = await this.client
             .from('wishes')
-            .insert(insertData)
+            .insert({ ...insertData, owner_id: null })
             .select()
             .single();
 
-          if (!retryResult.error) {
-            data = retryResult.data;
+          if (!fallbackNullResult.error) {
+            data = fallbackNullResult.data;
             error = null;
           }
-        } catch {
-          // ignore error and proceed to fallback
         }
       }
 
-      // If still error, insert with owner_id = null so wish is NEVER lost
       if (error) {
-        const fallbackNullResult = await this.client
-          .from('wishes')
-          .insert({ ...insertData, owner_id: null })
-          .select()
-          .single();
-
-        if (!fallbackNullResult.error) {
-          data = fallbackNullResult.data;
-          error = null;
-        }
+        console.warn('Supabase createWish error, falling back to in-memory store:', error.message);
+        return await this.demoFallback.createWish(wish);
       }
+      return rowToWish(data as WishRow);
+    } catch (err: unknown) {
+      console.warn('Supabase createWish network exception, falling back to in-memory store:', err);
+      return await this.demoFallback.createWish(wish);
     }
-
-    if (error) {
-      console.error('Supabase createWish error:', error.message);
-      throw new Error(`Database error: ${error.message}`);
-    }
-    return rowToWish(data as WishRow);
   }
 
   async getWishByToken(publicToken: string): Promise<Wish | null> {

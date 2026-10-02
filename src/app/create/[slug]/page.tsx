@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Input, Textarea, Card, Badge } from '@/components/ui';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { TEMPLATES } from '@/lib/templates/definitions';
 
 const composeSchema = z.object({
@@ -45,6 +47,7 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
   const unwrappedParams = React.use(params);
   const slug = unwrappedParams.slug;
   const template = useMemo(() => TEMPLATES.find((t) => t.slug === slug), [slug]);
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -76,6 +79,28 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
         <h2 className="text-3xl font-bold tracking-tight text-charcoal mb-4">Template not found</h2>
         <p className="text-charcoal-muted mb-8">The template you are looking for doesn&apos;t exist or has been removed.</p>
         <Button onClick={() => router.push('/create')}>Browse Templates</Button>
+      </div>
+    );
+  }
+
+  if (!isAuthLoading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-ivory flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-md w-full bg-surface p-8 rounded-3xl shadow-elevated border border-border-light text-center animate-fade-in">
+          <div className="text-5xl mb-4">🔐</div>
+          <h2 className="text-2xl font-bold text-charcoal mb-2">Sign in to customize wish</h2>
+          <p className="text-sm text-charcoal-muted mb-6">
+            Please log in or create a free account to compose, customize, and publish your wish using the <span className="font-semibold text-plum">{template.title}</span> template.
+          </p>
+          <div className="space-y-3">
+            <Link href={`/login?redirect=${encodeURIComponent(`/create/${slug}`)}`} className="w-full block">
+              <Button size="lg" className="w-full">Log In to Continue</Button>
+            </Link>
+            <Link href={`/signup?redirect=${encodeURIComponent(`/create/${slug}`)}`} className="w-full block">
+              <Button size="lg" variant="outline" className="w-full">Create Free Account</Button>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -149,6 +174,16 @@ export default function CreateSlugPage({ params }: { params: Promise<{ slug: str
       }
 
       const createdWish = await res.json();
+
+      // Cache locally for guest resilience & instant viewing
+      try {
+        const stored = JSON.parse(localStorage.getItem('wishora-published-wishes') || '[]');
+        stored.unshift(createdWish);
+        localStorage.setItem('wishora-published-wishes', JSON.stringify(stored.slice(0, 20)));
+      } catch {
+        // localStorage not available
+      }
+
       router.push(`/create/${template.slug}/share?token=${createdWish.publicToken}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong';
